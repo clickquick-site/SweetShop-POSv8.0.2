@@ -1242,16 +1242,30 @@
                     <i class="fa-regular fa-rectangle-ad"></i>
                     <span>حجم الملصق (عرض × ارتفاع)</span>
                   </div>
+                  <div class="setting-desc">اختر الحجم المناسب للاصق الطابعة الحرارية</div>
                 </div>
                 <div class="setting-control">
                   <select class="form-select" id="barcodeSize" onchange="updateBarcodePreview()">
-                    <option value="30x20">30 × 20 مم</option>
-                    <option value="40x20">40 × 20 مم</option>
-                    <option value="38x25">38 × 25 مم</option>
-                    <option value="40x25">40 × 25 مم</option>
-                    <option value="40x30" selected>40 × 30 مم</option>
-                    <option value="58x20">58 × 20 مم</option>
-                    <option value="58x30">58 × 30 مم</option>
+                    <optgroup label="── صغير ──">
+                      <option value="30x20">30 × 20 مم</option>
+                      <option value="40x20">40 × 20 مم</option>
+                      <option value="38x25">38 × 25 مم</option>
+                      <option value="40x25">40 × 25 مم</option>
+                    </optgroup>
+                    <optgroup label="── متوسط (الأكثر شيوعاً) ──">
+                      <option value="40x30" selected>40 × 30 مم ★ افتراضي</option>
+                      <option value="50x30">50 × 30 مم</option>
+                      <option value="57x32">57 × 32 مم</option>
+                      <option value="50x40">50 × 40 مم</option>
+                    </optgroup>
+                    <optgroup label="── كبير ──">
+                      <option value="58x20">58 × 20 مم</option>
+                      <option value="58x30">58 × 30 مم</option>
+                      <option value="58x40">58 × 40 مم</option>
+                      <option value="60x40">60 × 40 مم</option>
+                      <option value="70x50">70 × 50 مم</option>
+                      <option value="100x50">100 × 50 مم</option>
+                    </optgroup>
                   </select>
                 </div>
               </div>
@@ -1263,25 +1277,35 @@
                     <i class="fa-solid fa-qrcode"></i>
                     <span>نوع الباركود</span>
                   </div>
+                  <div class="setting-desc">CODE128 مناسب لجميع المنتجات</div>
                 </div>
                 <div class="setting-control">
                   <select class="form-select" id="barcodeType" onchange="updateBarcodePreview()">
-                    <option value="CODE128">CODE 128 (افتراضي)</option>
-                    <option value="EAN13">EAN-13 (13 رقم)</option>
-                    <option value="EAN8">EAN-8 (8 أرقام)</option>
-                    <option value="UPCA">UPC-A (12 رقم)</option>
+                    <optgroup label="── عام ──">
+                      <option value="CODE128">CODE 128 — افتراضي، يدعم أي نص ورقم</option>
+                      <option value="CODE39">CODE 39 — أرقام وحروف كبيرة فقط</option>
+                    </optgroup>
+                    <optgroup label="── تجزئة ──">
+                      <option value="EAN13">EAN-13 — 13 رقم (منتجات أوروبية)</option>
+                      <option value="EAN8">EAN-8 — 8 أرقام (منتجات صغيرة)</option>
+                      <option value="UPCA">UPC-A — 12 رقم (منتجات أمريكية)</option>
+                    </optgroup>
+                    <optgroup label="── صناعي ──">
+                      <option value="ITF14">ITF-14 — 14 رقم (صناديق شحن)</option>
+                      <option value="MSI">MSI — للمستودعات والجرد</option>
+                    </optgroup>
                   </select>
                 </div>
               </div>
 
-              <!-- حجم خط النص فقط (الباركود لا يتغير حجمه) -->
+              <!-- حجم الخط -->
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">
                     <i class="fa-solid fa-font"></i>
                     <span>حجم خط النص</span>
                   </div>
-                  <div class="setting-desc">يؤثر على النص والأرقام فقط — الباركود ثابت</div>
+                  <div class="setting-desc">يؤثر على النصوص — الباركود يتكيف تلقائياً</div>
                 </div>
                 <div class="setting-control">
                   <div class="font-size-control">
@@ -1327,22 +1351,31 @@
               <i class="fa-solid fa-eye"></i>
               <h3>معاينة الملصق</h3>
             </div>
-            <div class="card-body" style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+            <div class="card-body" style="display:flex;flex-direction:column;align-items:center;gap:14px;">
 
-              <!-- حاوية المعاينة: نسبة أبعاد الملصق -->
-              <div style="position:relative;background:#f0f0f0;padding:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:160px;width:100%;">
+              <!-- إطار المعاينة -->
+              <div style="position:relative;background:#e8e8e8;padding:20px;border-radius:10px;
+                display:flex;align-items:center;justify-content:center;
+                min-height:180px;width:100%;box-shadow:inset 0 2px 6px rgba(0,0,0,.2);">
                 <div id="bcPreviewWrap" style="
                   background:#fff;
-                  box-shadow:0 2px 8px rgba(0,0,0,0.3);
+                  box-shadow:0 3px 12px rgba(0,0,0,.4);
                   overflow:hidden;
-                  display:flex;align-items:center;justify-content:center;
+                  display:flex;flex-direction:column;align-items:center;justify-content:center;
+                  padding:3px;
                 ">
-                  <canvas id="bcPreviewCanvas" style="display:block;image-rendering:crisp-edges;"></canvas>
+                  <!-- محتوى المعاينة الحية -->
+                  <div id="bcPreviewInner" style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;"></div>
                 </div>
               </div>
 
-              <!-- معلومات الحجم -->
-              <div id="bcSizeInfo" style="font-size:0.78rem;color:var(--text-secondary);text-align:center;"></div>
+              <!-- معلومات + زر اختبار -->
+              <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;flex-wrap:wrap;">
+                <div id="bcSizeInfo" style="font-size:0.78rem;color:var(--text-secondary);"></div>
+                <button class="btn btn-secondary btn-sm" onclick="testPrintBarcode()" style="white-space:nowrap;">
+                  <i class="fa-solid fa-print"></i> طباعة تجريبية
+                </button>
+              </div>
 
             </div>
           </div>
