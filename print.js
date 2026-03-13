@@ -163,7 +163,7 @@
         '<td style="text-align:right;">المدفوع:</td>' +
         '<td style="text-align:left;direction:ltr;">0.00 ' + esc(currency) + '</td>' +
         '</tr>' +
-        '<tr class="total-row" style="color:#c53030;">' +
+        '<tr class="total-row" style="color:#000;font-weight:900;">' +
         '<td style="text-align:right;">الدين:</td>' +
         '<td style="text-align:left;direction:ltr;">' + fmt(netTotal) + ' ' + esc(currency) + '</td>' +
         '</tr>';
@@ -173,7 +173,7 @@
         '<td style="text-align:right;">المدفوع:</td>' +
         '<td style="text-align:left;direction:ltr;">' + fmt(paid) + ' ' + esc(currency) + '</td>' +
         '</tr>' +
-        '<tr class="total-row" style="color:#c53030;">' +
+        '<tr class="total-row" style="color:#000;font-weight:900;">' +
         '<td style="text-align:right;">الدين:</td>' +
         '<td style="text-align:left;direction:ltr;">' + fmt(debt) + ' ' + esc(currency) + '</td>' +
         '</tr>';
@@ -242,7 +242,7 @@
     var css =
       '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}' +
       '@page{size:' + paperMm + 'mm auto;margin:2mm;}' +
-      'html,body{width:100%;max-width:' + (paperMm-4) + 'mm;background:#fff;' +
+      'html,body{width:100%;max-width:' + (paperMm-4) + 'mm;background:#fff;margin:0;padding:0;' +
       'font-family:"Courier New",Courier,monospace;' +
       'font-size:' + fontSize + ';font-weight:800;direction:rtl;color:#000;}' +
       '.content{width:' + printW + 'mm;margin:0 auto;}' +
