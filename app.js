@@ -358,6 +358,12 @@ class DatabaseManager {
         soundAdd: '1',
         soundSell: '1',
         soundButtons: '1',
+        soundNavPage: '1',
+        soundNavTab: '1',
+        soundWarning: '1',
+        soundOutOfStock: '1',
+        soundAlert: '1',
+        soundLogin: '1',
         barcodeReader: '1',
         barcodeAuto: '1',
         touchKeyboard: '0',
@@ -948,6 +954,7 @@ class NotificationManager {
   }
 
   push(id, icon, title, body, type = 'warning', ttl = 86400000) {
+    window.SoundManager?.play('alert'); // صوت الإشعار
     const now = Date.now();
     
     // التحقق من التكرار
@@ -1168,7 +1175,7 @@ class NotificationManager {
   async _scheduleChecks() {
     if (!this.db) return;
     
-    const settings = await this.db.get('settings', 'notifEnabled');
+    const settings = await this.db.get('settings', 'notificationsEnabled');
     if (settings?.value !== '1') return;
     
     await this._checkConditions();
@@ -1190,7 +1197,7 @@ class NotificationManager {
       const now = Date.now();
       
       // فحص المخزون المنخفض
-      if (settingsMap.notifLowStock !== '0') {
+      if (settingsMap.notifyLowStock !== '0') {
         const lowStockThreshold = parseInt(settingsMap.lowStockAlert) || 5;
         products
           .filter(p => p.quantity > 0 && p.quantity <= lowStockThreshold)
@@ -1206,21 +1213,18 @@ class NotificationManager {
       }
       
       // فحص المنتجات المنتهية
-      if (settingsMap.notifExpiry !== '0') {
+      // daysBetween(expiry) = (today - expiry):
+      //   양수 (موجب)  = منتهي الصلاحية (اليوم تجاوز تاريخ الصلاحية)
+      //   صفر         = ينتهي اليوم
+      //   سالب        = لم ينته بعد، وعدده يساوي الأيام المتبقية
+      if (settingsMap.notifyExpiry !== '0') {
         const expiryDays = parseInt(settingsMap.expiryAlertDays) || 30;
         products
           .filter(p => p.expiryDate)
           .forEach(p => {
-            const daysLeft = DateUtils.daysBetween(p.expiryDate);
-            if (daysLeft <= expiryDays && daysLeft > 0) {
-              this.push(
-                `exp_${p.id}`,
-                '⏰',
-                'انتهاء الصلاحية قريب',
-                `${p.name} — يتبقى ${daysLeft} يوم`,
-                'warning'
-              );
-            } else if (daysLeft <= 0) {
+            const daysSince = DateUtils.daysBetween(p.expiryDate);
+            // منتهي: اليوم أو ما بعده (daysSince >= 0)
+            if (daysSince >= 0) {
               this.push(
                 `exp_${p.id}`,
                 '❌',
@@ -1228,12 +1232,22 @@ class NotificationManager {
                 `${p.name} — انتهت الصلاحية`,
                 'danger'
               );
+            // ينتهي قريباً: في غضون expiryDays يوماً (daysSince سالب بين -expiryDays و -1)
+            } else if (daysSince >= -expiryDays) {
+              const remaining = -daysSince;
+              this.push(
+                `exp_${p.id}`,
+                '⏰',
+                'انتهاء الصلاحية قريب',
+                `${p.name} — يتبقى ${remaining} يوم`,
+                'warning'
+              );
             }
           });
       }
       
       // فحص الديون المتأخرة
-      if (settingsMap.notifDebt30 !== '0') {
+      if (settingsMap.notifyDebt !== '0') {
         debts
           .filter(d => !d.isPaid)
           .forEach(d => {
@@ -1782,9 +1796,19 @@ function initSidebar() {
   });
 
 
-  // ── صوت الأزرار العام ────────────────────────────────────────
+  // ── أصوات الانتقال والأزرار العامة ──────────────────────────
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('button, .tab-btn, .action-btn, .product-card');
+    // انتقال بين صفحات التطبيق
+    const navLink = e.target.closest('a[href]');
+    if (navLink) {
+      const href = navLink.getAttribute('href') || '';
+      if (href.endsWith('.html') && !href.startsWith('http')) {
+        window.SoundManager?.play('nav-page');
+        return;
+      }
+    }
+    // الأزرار العامة (غير أزرار التنقل)
+    const btn = e.target.closest('button, .action-btn, .product-card');
     if (btn) window.SoundManager?.play('button');
   }, { capture: true, passive: true });
 
@@ -1792,13 +1816,15 @@ function initSidebar() {
   document.getElementById('sidebarLogout')?.addEventListener('click', async () => {
     closeSidebar();
     const ok = await window.modalManager.confirm('هل تريد تسجيل الخروج؟', { yes: 'خروج', no: 'إلغاء' });
-    if (ok) window.sessionManager.logout(true);
+    if (ok) window.SoundManager?.play('login');
+    window.sessionManager.logout(true);
   });
 }
 
 // ══════════════════════════════════════════════════════════════
-//  وحدة الأصوات — SoundManager
-//  يستخدم Web Audio API لتوليد أصوات بدون ملفات خارجية
+//  وحدة الأصوات الشاملة — SoundManager v2
+//  9 أحداث صوتية تغطي جميع نقاط التطبيق
+//  Web Audio API — بدون ملفات خارجية
 // ══════════════════════════════════════════════════════════════
 const SoundManager = (() => {
   let _ctx = null;
@@ -1807,62 +1833,129 @@ const SoundManager = (() => {
     if (!_ctx || _ctx.state === 'closed') {
       _ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
-    // استئناف السياق إذا كان معلّقاً (سياسة المتصفح)
     if (_ctx.state === 'suspended') _ctx.resume();
     return _ctx;
   }
 
-  // تشغيل نغمة بمعاملات محددة
-  function _beep({ freq = 880, type = 'sine', duration = 0.12, volume = 0.4, decay = 0.08 } = {}) {
+  function _beep({ freq = 880, type = 'sine', dur = 0.12, vol = 0.4, decay = 0.08 } = {}) {
     try {
       const ctx = _getCtx();
-      const osc = ctx.createOscillator();
+      const osc  = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.type = type;
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      gain.gain.setValueAtTime(volume, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
       osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + duration + decay);
-    } catch (e) {
-      // صامت — لا نكسر التطبيق بسبب الصوت
-    }
+      osc.stop(ctx.currentTime + dur + decay);
+    } catch (_) {}
   }
 
-  // ── الأصوات المُعرَّفة ──────────────────────────────────────
+  // ──────────────────────────────────────────────────────────
+  //  تعريف الأصوات التسعة
+  // ──────────────────────────────────────────────────────────
 
-  // صوت إضافة منتج: نغمتان صاعدتان خفيفتان
+  // 1. إضافة منتج للسلة — نغمتان صاعدتان
   function playAdd() {
-    _beep({ freq: 660, type: 'triangle', duration: 0.08, volume: 0.35 });
-    setTimeout(() => _beep({ freq: 880, type: 'triangle', duration: 0.1, volume: 0.3 }), 90);
+    _beep({ freq: 660, type: 'triangle', dur: 0.08, vol: 0.35 });
+    setTimeout(() => _beep({ freq: 880, type: 'triangle', dur: 0.10, vol: 0.30 }), 90);
   }
 
-  // صوت إتمام البيع: ثلاث نغمات احتفالية
+  // 2. إتمام البيع — ثلاث نغمات احتفالية (Do Mi Sol)
   function playSell() {
-    _beep({ freq: 523, type: 'sine', duration: 0.1, volume: 0.4 });
-    setTimeout(() => _beep({ freq: 659, type: 'sine', duration: 0.1, volume: 0.4 }), 110);
-    setTimeout(() => _beep({ freq: 784, type: 'sine', duration: 0.18, volume: 0.45 }), 220);
+    _beep({ freq: 523, type: 'sine', dur: 0.10, vol: 0.40 });
+    setTimeout(() => _beep({ freq: 659, type: 'sine', dur: 0.10, vol: 0.40 }), 110);
+    setTimeout(() => _beep({ freq: 784, type: 'sine', dur: 0.18, vol: 0.45 }), 220);
   }
 
-  // صوت الأزرار: نقرة قصيرة
+  // 3. الأزرار العامة — نقرة قصيرة
   function playButton() {
-    _beep({ freq: 440, type: 'square', duration: 0.05, volume: 0.2 });
+    _beep({ freq: 440, type: 'square', dur: 0.05, vol: 0.18 });
   }
 
-  // ── الواجهة العامة ──────────────────────────────────────────
+  // 4. الانتقال بين الإدارات (صفحة كاملة) — نغمة سلسة هابطة
+  function playNavPage() {
+    _beep({ freq: 740, type: 'sine', dur: 0.10, vol: 0.25 });
+    setTimeout(() => _beep({ freq: 587, type: 'sine', dur: 0.12, vol: 0.20 }), 100);
+  }
+
+  // 5. الانتقال بين أقسام الإدارة (تبويب داخلي) — نبضة خفيفة
+  function playNavTab() {
+    _beep({ freq: 600, type: 'sine', dur: 0.07, vol: 0.22 });
+    setTimeout(() => _beep({ freq: 720, type: 'sine', dur: 0.07, vol: 0.18 }), 75);
+  }
+
+  // 6. تحذير / خطأ — نغمتان هابطتان
+  function playWarning() {
+    _beep({ freq: 523, type: 'sawtooth', dur: 0.12, vol: 0.35 });
+    setTimeout(() => _beep({ freq: 392, type: 'sawtooth', dur: 0.15, vol: 0.30 }), 130);
+  }
+
+  // 7. منتج نفد من المخزن — صوت تنبيه قصير متكرر
+  function playOutOfStock() {
+    [0, 160, 320].forEach((d) =>
+      setTimeout(() => _beep({ freq: 350, type: 'square', dur: 0.10, vol: 0.28 }), d)
+    );
+  }
+
+  // 8. إشعار وصول (دين / صلاحية / مخزون) — رنة تنبيهية
+  function playAlert() {
+    _beep({ freq: 880, type: 'sine', dur: 0.08, vol: 0.30 });
+    setTimeout(() => _beep({ freq: 880, type: 'sine', dur: 0.08, vol: 0.30 }), 150);
+    setTimeout(() => _beep({ freq: 1047, type: 'sine', dur: 0.14, vol: 0.35 }), 300);
+  }
+
+  // 9. تسجيل الدخول / الخروج — نغمة ترحيب
+  function playLogin() {
+    _beep({ freq: 392, type: 'sine', dur: 0.10, vol: 0.30 });
+    setTimeout(() => _beep({ freq: 523, type: 'sine', dur: 0.10, vol: 0.30 }), 110);
+    setTimeout(() => _beep({ freq: 659, type: 'sine', dur: 0.14, vol: 0.35 }), 220);
+  }
+
+  // ── خريطة النوع → المفتاح في الإعدادات ──────────────────
+  const KEY_MAP = {
+    'add':         'soundAdd',
+    'sell':        'soundSell',
+    'button':      'soundButtons',
+    'nav-page':    'soundNavPage',
+    'nav-tab':     'soundNavTab',
+    'warning':     'soundWarning',
+    'out-of-stock':'soundOutOfStock',
+    'alert':       'soundAlert',
+    'login':       'soundLogin',
+  };
+
+  const FN_MAP = {
+    'add':          playAdd,
+    'sell':         playSell,
+    'button':       playButton,
+    'nav-page':     playNavPage,
+    'nav-tab':      playNavTab,
+    'warning':      playWarning,
+    'out-of-stock': playOutOfStock,
+    'alert':        playAlert,
+    'login':        playLogin,
+  };
+
+  // ── الواجهة العامة ────────────────────────────────────────
   async function play(type) {
-    const key = type === 'add' ? 'soundAdd' : type === 'sell' ? 'soundSell' : 'soundButtons';
-    const enabled = await getSetting(key);
-    // مفعّل إذا كانت القيمة '1' أو true أو لم تُضبط بعد
-    if (enabled === '0' || enabled === false) return;
-    if (type === 'add')    playAdd();
-    else if (type === 'sell')   playSell();
-    else if (type === 'button') playButton();
+    const settingKey = KEY_MAP[type];
+    if (!settingKey) return;
+    const enabled = await getSetting(settingKey);
+    if (enabled === '0') return;           // مُعطَّل صراحةً
+    const fn = FN_MAP[type];
+    if (fn) fn();
   }
 
-  return { play };
+  // تشغيل فوري بدون فحص الإعداد (للاستخدام الداخلي الحرج)
+  function playDirect(type) {
+    const fn = FN_MAP[type];
+    if (fn) fn();
+  }
+
+  return { play, playDirect };
 })();
 
 window.SoundManager = SoundManager;
