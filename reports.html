@@ -166,6 +166,8 @@
     .kpi-card.profit::before { background: linear-gradient(90deg, #7c3aed, #5b21b6); }
     .kpi-card.expenses::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
     .kpi-card.debts::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    .kpi-card.settled::before { background: linear-gradient(90deg, #10b981, #059669); }
+    .kpi-icon.settled { background: rgba(16,185,129,0.15); color: #10b981; }
 
     .kpi-header {
       display: flex;
@@ -575,6 +577,10 @@
       color: #10b981;
     }
 
+    .status-settled {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+    }
     .status-debt {
       background: rgba(239, 68, 68, 0.15);
       color: #ef4444;
@@ -866,6 +872,20 @@
           <div class="kpi-compare">
             <span>عدد الديون</span>
             <span id="debtsCount" class="trend-flat">0</span>
+          </div>
+        </div>
+
+        <div class="kpi-card settled">
+          <div class="kpi-header">
+            <span class="kpi-title">الديون المسددة (اليوم)</span>
+            <div class="kpi-icon settled">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiSettled">0</div>
+          <div class="kpi-compare">
+            <span>عدد التسديدات</span>
+            <span id="settledCount" class="trend-flat">0</span>
           </div>
         </div>
       </div>
@@ -1574,11 +1594,21 @@ async function loadDashboard() {
   const debtsTotal = todayDebts.reduce((sum, d) => sum + (d.amount || 0), 0);
   
   // تحديث بطاقات KPI
+  // الديون المسددة اليوم (سجلات sales بـ invoiceKind = settlement أو partial)
+  const todaySettled = allSales.filter(s =>
+    !s.isCancelled &&
+    s.date.startsWith(today) &&
+    (s.invoiceKind === 'settlement' || s.invoiceKind === 'partial')
+  );
+  const settledTotal = todaySettled.reduce((sum, s) => sum + (s.paid || 0), 0);
+
   document.getElementById('kpiRevenue').textContent = window.currencyFormatter.format(todayRevenue);
   document.getElementById('kpiProfit').textContent = window.currencyFormatter.format(todayProfit);
   document.getElementById('kpiExpenses').textContent = window.currencyFormatter.format(expensesTotal);
   document.getElementById('kpiDebts').textContent = window.currencyFormatter.format(debtsTotal);
   document.getElementById('debtsCount').textContent = todayDebts.length;
+  document.getElementById('kpiSettled').textContent = window.currencyFormatter.format(settledTotal);
+  document.getElementById('settledCount').textContent = todaySettled.length;
   
   // حساب التغير مقارنة بالأمس
   const revenueChange = yesterdayRevenue ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue * 100).toFixed(1) : 0;
@@ -1970,19 +2000,24 @@ async function updateRecentSales() {
   
   tbody.innerHTML = recent.map(sale => {
     const customer = allCustomers.find(c => c.id === sale.customerId);
-    const items = allItems.filter(i => i.saleId === sale.id);
-    
+
     let statusClass = 'status-paid';
-    let statusText = 'مسددة';
-    
-    if (sale.isDebt && sale.paid === 0) {
+    let statusText = 'نقدي';
+
+    if (sale.invoiceKind === 'settlement') {
+      statusClass = 'status-settled';
+      statusText = 'تسديد دين';
+    } else if (sale.invoiceKind === 'partial') {
+      statusClass = 'status-partial';
+      statusText = 'تسديد جزئي';
+    } else if (sale.isDebt && sale.paid === 0) {
       statusClass = 'status-debt';
       statusText = 'دين';
     } else if (sale.isDebt && sale.paid > 0) {
       statusClass = 'status-partial';
       statusText = 'جزئي';
     }
-    
+
     return `
       <tr>
         <td>${sale.invoiceNumber || '—'}</td>
