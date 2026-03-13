@@ -1187,13 +1187,13 @@ async function updateAlerts() {
   
   const expiring = allProducts.filter(p => {
     if (!p.expiryDate) return false;
-    const daysLeft = window.dateUtils.daysBetween(p.expiryDate);
-    return daysLeft > 0 && daysLeft <= expiryDays;
+    const daysSince = window.dateUtils.daysBetween(p.expiryDate);
+    return daysSince < 0 && daysSince >= -expiryDays;
   }).length;
   
   const expired = allProducts.filter(p => {
     if (!p.expiryDate) return false;
-    return window.dateUtils.daysBetween(p.expiryDate) <= 0;
+    return window.dateUtils.daysBetween(p.expiryDate) >= 0;
   }).length;
   
   document.getElementById('alertsGrid').innerHTML = `
@@ -1249,6 +1249,7 @@ function switchTab(tabId) {
     loadAdjustProducts();
     loadMovementLog();
   }
+  window.SoundManager?.play('nav-tab');
 }
 
 // ============================================================
@@ -1283,8 +1284,8 @@ async function loadProducts() {
       if (stockFilter === 'out') return p.quantity === 0;
       if (stockFilter === 'expiring') {
         if (!p.expiryDate) return false;
-        const days = window.dateUtils.daysBetween(p.expiryDate);
-        return days > 0 && days <= expiryDays;
+        const daysSince = window.dateUtils.daysBetween(p.expiryDate);
+        return daysSince < 0 && daysSince >= -expiryDays;
       }
       return true;
     });
@@ -1327,14 +1328,16 @@ function renderProducts(products) {
     let expiryClass = 'expiry-ok';
     let expiryText = '—';
     if (p.expiryDate) {
-      const days = window.dateUtils.daysBetween(p.expiryDate);
+      const daysSince = window.dateUtils.daysBetween(p.expiryDate);
       expiryText = window.dateUtils.formatDate(p.expiryDate);
-      if (days <= 0) {
+      if (daysSince >= 0) {
+        // منتهي: اليوم أو ما قبله
         expiryClass = 'expiry-danger';
         expiryText += ' (منتهي)';
-      } else if (days <= 30) {
+      } else if (daysSince >= -30) {
+        // ينتهي خلال 30 يوماً
         expiryClass = 'expiry-warning';
-        expiryText += ` (${days} يوم)`;
+        expiryText += ` (${-daysSince} يوم)`;
       }
     }
     
