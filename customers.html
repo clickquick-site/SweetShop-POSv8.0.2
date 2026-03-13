@@ -1449,118 +1449,129 @@ async function confirmPayment() {
   const amount = parseFloat(document.getElementById('paymentAmount').value);
   const note = document.getElementById('paymentNote').value.trim();
   const now = window.dateUtils.now();
-  
+
   if (!amount || amount <= 0) {
     window.toast.show('أدخل مبلغاً صحيحاً', 'warning');
     return;
   }
-  
+
   let remainingAmount = amount;
-  
+  // تجميع ديون مرتبطة بهذه الدفعة لربطها بالفاتورة
+  const linkedDebtIds = [];
+
   if (activeDebtId) {
-    // تسديد دين واحد
     const debt = await window.dbManager.get('debts', activeDebtId);
     if (!debt) return;
-    
+
     if (amount >= debt.amount) {
-      // تسديد كامل
-      debt.isPaid = true;
-      debt.paidDate = now;
-      debt.amount = 0;
-      await window.dbManager.put('debts', debt);
-      
+      const origAmt = debt.originalAmount || debt.amount;
+      linkedDebtIds.push(debt.id);
       await window.dbManager.add('debtPayments', {
-        debtId: debt.id,
-        customerId: activeCustomerId,
-        amount: debt.originalAmount || debt.amount,
-        before: debt.originalAmount || debt.amount,
-        after: 0,
-        note: note || 'تسديد كامل',
-        date: now
+        debtId: debt.id, customerId: activeCustomerId,
+        amount: origAmt, before: origAmt, after: 0,
+        note: note || 'تسديد كامل', date: now
       });
-      
+      debt.isPaid = true; debt.paidDate = now; debt.amount = 0;
+      await window.dbManager.put('debts', debt);
     } else {
-      // تسديد جزئي
       const before = debt.amount;
+      linkedDebtIds.push(debt.id);
+      await window.dbManager.add('debtPayments', {
+        debtId: debt.id, customerId: activeCustomerId,
+        amount, before, after: before - amount,
+        note: note || 'تسديد جزئي', date: now
+      });
       debt.amount = before - amount;
       await window.dbManager.put('debts', debt);
-      
-      await window.dbManager.add('debtPayments', {
-        debtId: debt.id,
-        customerId: activeCustomerId,
-        amount,
-        before,
-        after: debt.amount,
-        note: note || 'تسديد جزئي',
-        date: now
-      });
     }
-    
   } else {
-    // تسديد كل الديون (الأقدم أولاً)
     const debts = allDebts
       .filter(d => d.customerId === activeCustomerId && !d.isPaid)
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-    
+
     for (const debt of debts) {
       if (remainingAmount <= 0) break;
-      
+      linkedDebtIds.push(debt.id);
       if (remainingAmount >= debt.amount) {
-        // تسديد هذا الدين بالكامل
         const before = debt.amount;
         remainingAmount -= debt.amount;
-        
         await window.dbManager.add('debtPayments', {
-          debtId: debt.id,
-          customerId: activeCustomerId,
-          amount: before,
-          before,
-          after: 0,
-          note: note || 'تسديد كامل',
-          date: now
+          debtId: debt.id, customerId: activeCustomerId,
+          amount: before, before, after: 0,
+          note: note || 'تسديد كامل', date: now
         });
-        
-        debt.isPaid = true;
-        debt.paidDate = now;
-        debt.amount = 0;
+        debt.isPaid = true; debt.paidDate = now; debt.amount = 0;
         await window.dbManager.put('debts', debt);
-        
       } else {
-        // تسديد جزء من هذا الدين
         const before = debt.amount;
-        debt.amount = before - remainingAmount;
-        
         await window.dbManager.add('debtPayments', {
-          debtId: debt.id,
-          customerId: activeCustomerId,
-          amount: remainingAmount,
-          before,
-          after: debt.amount,
-          note: note || 'تسديد جزئي',
-          date: now
+          debtId: debt.id, customerId: activeCustomerId,
+          amount: remainingAmount, before, after: before - remainingAmount,
+          note: note || 'تسديد جزئي', date: now
         });
-        
+        debt.amount = before - remainingAmount;
         await window.dbManager.put('debts', debt);
         remainingAmount = 0;
       }
     }
   }
-  
+
+  // ── إنشاء سجل مبيعات للتسديد حتى يظهر في التقارير ──────
+  const customer = allCustomers.find(c => c.id === activeCustomerId);
+  const user = window.sessionManager?.getUser();
+  const invoiceNumber = await window.getNextInvoiceNumber();
+
+  // هل التسديد كامل أم جزئي؟
+  const totalDebtBefore = parseFloat(document.getElementById('paymentInfo').dataset.totalDebt) || amount;
+  const isFullSettlement = amount >= totalDebtBefore;
+  const invoiceKind = isFullSettlement ? 'settlement' : 'partial';
+
+  const saleId = await window.dbManager.add('sales', {
+    invoiceNumber,
+    userId: user?.id || 0,
+    customerId: activeCustomerId,
+    total: amount,
+    discount: 0,
+    paid: amount,
+    change: 0,
+    isDebt: 0,
+    invoiceKind,
+    isCancelled: 0,
+    date: now,
+    sellerName: user?.username || '',
+    note: note || (isFullSettlement ? 'تسديد دين كامل' : 'تسديد دين جزئي'),
+    linkedDebtIds: JSON.stringify(linkedDebtIds)
+  });
+
+  await window.dbManager.add('saleItems', {
+    saleId,
+    productId: 0,
+    productName: note || (isFullSettlement ? 'تسديد دين' : 'تسديد دين جزئي'),
+    quantity: 1,
+    unitPrice: amount,
+    total: amount
+  });
+
   await loadAllData();
   window.modalManager.close('paymentModal');
-  
-  if (activeDebtId) {
-    window.modalManager.close('debtModal');
-  }
-  
+  if (activeDebtId) window.modalManager.close('debtModal');
   updateStats();
   renderCustomers();
   window.toast.show(`✅ تم تسديد ${window.currencyFormatter.format(amount)}`, 'success');
-  
-  // عرض خيار الطباعة
+
+  // طباعة فاتورة التسديد
   const shouldPrint = await window.modalManager.confirm('هل تريد طباعة وصل التسديد؟');
   if (shouldPrint) {
-    await printPaymentReceipt(activeCustomerId, amount, note);
+    const sale = await window.dbManager.get('sales', saleId);
+    const items = await window.dbManager.getAll('saleItems', { index: 'saleId', value: saleId });
+    if (typeof window.printInvoice === 'function') {
+      await window.printInvoice({
+        ...sale,
+        customerName: customer?.name || '',
+        customerPhone: customer?.phone || '',
+        sellerName: user?.username || ''
+      }, items);
+    }
   }
 }
 
