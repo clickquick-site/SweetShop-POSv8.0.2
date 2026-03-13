@@ -2111,162 +2111,144 @@ function changeBarcodeFontSize(delta) {
 // ============================================================
 let _bcPreviewTimer = null;
 
+// ============================================================
+//  معاينة الباركود الحية — SVG حقيقي بـ JsBarcode
+// ============================================================
 async function updateBarcodePreview() {
-  // debounce: لا نُعيد رسم إلا بعد 80ms من آخر تغيير
   clearTimeout(_bcPreviewTimer);
-  _bcPreviewTimer = setTimeout(_drawBcPreview, 80);
+  _bcPreviewTimer = setTimeout(_drawBcPreview, 120);
 }
 
 async function _drawBcPreview() {
-  const canvas  = document.getElementById('bcPreviewCanvas');
-  const wrap    = document.getElementById('bcPreviewWrap');
-  const sizeInfo= document.getElementById('bcSizeInfo');
-  if (!canvas || !wrap) return;
+  const inner    = document.getElementById('bcPreviewInner');
+  const wrap     = document.getElementById('bcPreviewWrap');
+  const sizeInfo = document.getElementById('bcSizeInfo');
+  if (!inner || !wrap) return;
 
-  const rawSize   = document.getElementById('barcodeSize')?.value || '40x30';
-  const bcType    = document.getElementById('barcodeType')?.value || 'CODE128';
-  const showStore = document.getElementById('barcodeShowStore')?.checked;
-  const showName  = document.getElementById('barcodeShowName')?.checked;
-  const showPrice = document.getElementById('barcodeShowPrice')?.checked;
-  const fs        = currentBarcodeFontSize;
+  // ── قراءة الإعدادات الحالية ─────────────────────────────
+  const rawSize   = document.getElementById('barcodeSize')?.value   || '40x30';
+  const bcType    = document.getElementById('barcodeType')?.value   || 'CODE128';
+  const showStore = document.getElementById('barcodeShowStore')?.checked  ?? false;
+  const showName  = document.getElementById('barcodeShowName')?.checked   ?? true;
+  const showPrice = document.getElementById('barcodeShowPrice')?.checked  ?? true;
+  const fs        = currentBarcodeFontSize || 10;
 
-  // ── نفس SIZES في print.js ─────────────────────────────────
-  // w = البعد الأقصر (يُرسم كعرض قبل التدوير)
-  // h = البعد الأطول (يُرسم كارتفاع قبل التدوير)
-  // بعد التدوير 90°: العرض النهائي = h، الارتفاع النهائي = w
+  const storeName = (await window.getSetting('storeName')) || 'اسم المتجر';
+  const currency  = (await window.getSetting('currency'))  || 'DA';
+
+  // ── جدول الأحجام (مم) ────────────────────────────────────
   const SIZES = {
-    '30x20':{w:20,h:30},'40x20':{w:20,h:40},'38x25':{w:25,h:38},
-    '40x25':{w:25,h:40},'40x30':{w:30,h:40},'58x20':{w:20,h:58},
-    '58x30':{w:30,h:58},
+    '30x20':{w:30,h:20},'40x20':{w:40,h:20},'38x25':{w:38,h:25},
+    '40x25':{w:40,h:25},'40x30':{w:40,h:30},'50x30':{w:50,h:30},
+    '50x40':{w:50,h:40},'57x32':{w:57,h:32},'58x20':{w:58,h:20},
+    '58x30':{w:58,h:30},'58x40':{w:58,h:40},'60x40':{w:60,h:40},
+    '70x50':{w:70,h:50},'100x50':{w:100,h:50},
   };
-  const sz = SIZES[rawSize] || {w:30,h:40};
+  const sz   = SIZES[rawSize] || {w:40,h:30};
+  const SCALE = 3.4;  // px per mm on screen
+  const PW    = Math.round(sz.w * SCALE);
+  const PH    = Math.round(sz.h * SCALE);
 
-  // ── المقياس: 4px لكل mm في المعاينة ──────────────────────
-  const SCALE = 4.0;
+  // ── أحجام الخطوط ─────────────────────────────────────────
+  const FSstore = Math.max(5, fs - 1);
+  const FSname  = Math.max(5, fs);
+  const FScode  = Math.max(5, fs - 2);
+  const FSprice = Math.max(5, fs + 1);
+  const FONT    = '"Tahoma","Arial",sans-serif';
 
-  // الـ canvas الوسيط (portrait — نفس ما يفعله _drawLabel)
-  const PW = Math.round(sz.w * SCALE);   // عرض portrait
-  const PH = Math.round(sz.h * SCALE);   // ارتفاع portrait
-  const P  = Math.round(0.7 * SCALE);    // padding
+  // ── حساب ارتفاع الباركود ─────────────────────────────────
+  const topPx = (showStore && storeName ? FSstore + 4 : 0) +
+                (showName              ? FSname  + 4 : 0);
+  const botPx = FScode + 3 +
+                (showPrice ? FSprice + 3 : 0);
+  const bcH   = Math.max(14, PH - topPx - botPx - 6);
 
-  const tmp = document.createElement('canvas');
-  tmp.width  = PW;
-  tmp.height = PH;
-  const ctx = tmp.getContext('2d');
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, PW, PH);
-  ctx.fillStyle = '#000';
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'top';
-
-  const storeName   = (await window.getSetting('storeName')) || 'اسم المتجر';
-  const currency    = (await window.getSetting('currency'))  || 'DA';
-  const sampleCode  = '1234567890';
-  const sampleName  = 'منتج تجريبي';
-  const samplePrice = '150 ' + currency;
-  const font        = '"Tahoma","Arial",sans-serif';
-
-  // حجم الخط من الإعداد — لا يعتمد على حجم الملصق
-  const FSS = Math.max(6,  Math.min(40, fs));
-  const FSP = Math.max(7,  Math.min(40, fs + 1));
-  const FSN = Math.max(5,  Math.min(30, fs - 2));
-  const FSR = Math.max(8,  Math.min(40, fs + 2));
-
-  let y = P;
-
-  if (showStore) {
-    ctx.font = '800 ' + FSS + 'px ' + font;
-    // قطع النص إذا فاق العرض
-    let t = storeName;
-    while (t.length > 1 && ctx.measureText(t).width > PW - P * 2) t = t.slice(0, -1);
-    if (t !== storeName) t += '…';
-    ctx.fillText(t, PW / 2, y);
-    y += FSS + Math.round(P * 0.5);
+  // ── بناء HTML الملصق ─────────────────────────────────────
+  const sampleCode = '1234567890';
+  let inner_html = '';
+  if (showStore && storeName) {
+    inner_html += `<div style="font-size:${FSstore}px;font-weight:900;font-family:${FONT};text-align:center;line-height:1.2;white-space:nowrap;overflow:hidden;max-width:100%;">${storeName}</div>`;
   }
   if (showName) {
-    ctx.font = '900 ' + FSP + 'px ' + font;
-    let t = sampleName;
-    while (t.length > 1 && ctx.measureText(t).width > PW - P * 2) t = t.slice(0, -1);
-    if (t !== sampleName) t += '…';
-    ctx.fillText(t, PW / 2, y);
-    y += FSP + Math.round(P * 0.5);
+    inner_html += `<div style="font-size:${FSname}px;font-weight:900;font-family:${FONT};text-align:center;line-height:1.2;white-space:nowrap;overflow:hidden;max-width:100%;">منتج تجريبي</div>`;
   }
-
-  // ارتفاع الباركود = المساحة المتبقية
-  const botH = P + FSN + Math.round(P * 0.5) + (showPrice ? FSR + Math.round(P * 0.5) : 0);
-  const bH   = Math.max(Math.round(3 * SCALE), PH - y - botH - P);
-  const bW   = PW - P * 2;
-
-  // ── رسم الباركود بـ JsBarcode (نفس منطق _drawLabel) ──────
-  let bcDrawn = false;
-  if (typeof JsBarcode !== 'undefined' && bcType !== 'QR') {
-    try {
-      const bc  = document.createElement('canvas');
-      const units = bcType === 'EAN13' ? 95 : bcType === 'EAN8' ? 67 : bcType === 'UPCA' ? 95 :
-                    Math.max(40, (sampleCode.length + 3) * 11 + 35);
-      const xd  = Math.max(1, Math.floor(bW / units));
-      JsBarcode(bc, sampleCode, {
-        format: bcType, width: xd, height: bH,
-        displayValue: false, margin: 0,
-        background: '#fff', lineColor: '#000'
-      });
-      if (bc.width > 0 && bc.height > 0) {
-        ctx.drawImage(bc, 0, 0, bc.width, bc.height, P, y, bW, bH);
-        bcDrawn = true;
-      }
-    } catch (e) {}
-  }
-  if (!bcDrawn) {
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth   = 1;
-    ctx.strokeRect(P, y, bW, bH);
-    ctx.font = '700 ' + FSN + 'px monospace';
-    ctx.fillText('[' + bcType + ']', PW / 2, y + bH / 2 - FSN / 2);
-  }
-  y += bH + Math.round(P * 0.3);
-
-  // رقم الباركود
-  ctx.font = '700 ' + FSN + 'px "Courier New",monospace';
-  ctx.fillText(sampleCode, PW / 2, y);
-  y += FSN + Math.round(P * 0.4);
-
-  // السعر
+  inner_html += `<div style="display:flex;align-items:center;justify-content:center;width:100%;overflow:hidden;padding:0 2px;">
+    <svg id="bcPreviewSvg" style="max-width:100%;height:${bcH}px;"></svg>
+  </div>`;
+  inner_html += `<div style="font-size:${FScode}px;font-family:'Courier New',monospace;text-align:center;letter-spacing:1px;">${sampleCode}</div>`;
   if (showPrice) {
-    ctx.font = '900 ' + FSR + 'px ' + font;
-    ctx.fillText(samplePrice, PW / 2, y);
+    inner_html += `<div style="font-size:${FSprice}px;font-weight:900;font-family:${FONT};text-align:center;">150 ${currency}</div>`;
   }
 
-  // ── تدوير 90° → landscape (نفس ما يفعله _drawLabel) ──────
-  // portrait: PW × PH
-  // بعد التدوير: عرض = PH، ارتفاع = PW
-  canvas.width  = PH;
-  canvas.height = PW;
-  const rctx = canvas.getContext('2d');
-  rctx.fillStyle = '#fff';
-  rctx.fillRect(0, 0, PH, PW);
-  rctx.translate(PH, 0);
-  rctx.rotate(Math.PI / 2);
-  rctx.drawImage(tmp, 0, 0);
+  // ── تطبيق الحجم ──────────────────────────────────────────
+  wrap.style.width    = PW + 'px';
+  wrap.style.height   = PH + 'px';
+  wrap.style.padding  = '2px';
+  inner.style.width   = '100%';
+  inner.style.height  = '100%';
+  inner.style.display = 'flex';
+  inner.style.flexDirection = 'column';
+  inner.style.alignItems    = 'center';
+  inner.style.justifyContent= 'center';
+  inner.style.gap = '1px';
+  inner.innerHTML = inner_html;
 
-  // ── ضبط الحجم المعروض (landscape: عرض > ارتفاع) ─────────
-  // الأبعاد الحقيقية للملصق بالـ mm: عرض = sz.h، ارتفاع = sz.w
-  const labelW_mm = sz.h;  // العرض الحقيقي بعد التدوير
-  const labelH_mm = sz.w;  // الارتفاع الحقيقي بعد التدوير
+  // ── رسم الباركود SVG ────────────────────────────────────
+  if (typeof JsBarcode !== 'undefined') {
+    try {
+      const formats = {
+        CODE128:{format:'CODE128',width:1.3},
+        CODE39 :{format:'CODE39', width:1.1},
+        EAN13  :{format:'EAN13',  width:1.4},
+        EAN8   :{format:'EAN8',   width:1.4},
+        UPCA   :{format:'UPC',    width:1.4},
+        ITF14  :{format:'ITF14',  width:1.3},
+        MSI    :{format:'MSI',    width:1.3},
+      };
+      const opt = formats[bcType] || formats.CODE128;
+      const svgEl = document.getElementById('bcPreviewSvg');
+      if (svgEl) {
+        JsBarcode(svgEl, sampleCode, {
+          format: opt.format,
+          width:  Math.max(1, Math.floor((PW - 4) / 110)),
+          height: bcH - 2,
+          displayValue: false,
+          margin: 0,
+          background: '#fff',
+          lineColor: '#000',
+        });
+        svgEl.style.maxWidth = (PW - 8) + 'px';
+        svgEl.style.height   = bcH + 'px';
+      }
+    } catch(e) {
+      const svgEl = document.getElementById('bcPreviewSvg');
+      if (svgEl) svgEl.innerHTML = '<text x="50%" y="50%" text-anchor="middle" font-size="8" fill="red">خطأ</text>';
+    }
+  }
 
-  const MAX_DISP_W = 340;
-  const dispW = Math.min(MAX_DISP_W, Math.round(labelW_mm * SCALE));
-  const dispH = Math.round(dispW * labelH_mm / labelW_mm);
-
-  canvas.style.width  = dispW + 'px';
-  canvas.style.height = dispH + 'px';
-  wrap.style.width    = dispW + 'px';
-  wrap.style.height   = dispH + 'px';
-
+  // ── معلومات الحجم ────────────────────────────────────────
   if (sizeInfo) {
     const [lw, lh] = rawSize.split('x');
     sizeInfo.textContent = `${lw} × ${lh} مم | خط: ${fs}px | ${bcType}`;
   }
 }
+
+// ============================================================
+//  طباعة تجريبية للباركود
+// ============================================================
+async function testPrintBarcode() {
+  if (typeof window.POSDZ_PRINT === 'undefined' || typeof window.POSDZ_PRINT.barcode !== 'function') {
+    window.toast?.show('⚠️ وحدة الطباعة غير محمّلة (print.js)', 'error');
+    return;
+  }
+  const fakeProduct = {
+    barcode:   '1234567890',
+    name:      'منتج تجريبي',
+    sellPrice: 150,
+  };
+  await window.POSDZ_PRINT.barcode(fakeProduct, 1);
+}
+
 
 // ============================================================
 //  معاينة الفاتورة الحية
