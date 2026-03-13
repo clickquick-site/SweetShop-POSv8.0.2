@@ -810,14 +810,19 @@
           <div class="settings-card">
             <div class="card-header">
               <i class="fa-solid fa-volume-high"></i>
-              <h3>الأصوات</h3>
+              <h3>الأصوات والرنين</h3>
             </div>
             <div class="card-body">
+
+              <div style="font-size:0.78rem;color:var(--text-secondary);padding:4px 0 10px;border-bottom:1px dashed var(--border);margin-bottom:10px;">
+                <i class="fa-solid fa-info-circle"></i> البيع والسلة
+              </div>
+
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">
                     <i class="fa-solid fa-plus-circle"></i>
-                    <span>صوت إضافة منتج</span>
+                    <span>صوت إضافة منتج للسلة</span>
                   </div>
                 </div>
                 <div class="setting-control">
@@ -846,8 +851,27 @@
               <div class="setting-row">
                 <div class="setting-info">
                   <div class="setting-label">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>صوت نفاد المخزون عند الإضافة</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="soundOutOfStock">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div style="font-size:0.78rem;color:var(--text-secondary);padding:12px 0 10px;border-bottom:1px dashed var(--border);margin-bottom:10px;">
+                <i class="fa-solid fa-info-circle"></i> التنقل والواجهة
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
                     <i class="fa-solid fa-bell"></i>
-                    <span>صوت الأزرار</span>
+                    <span>صوت الأزرار العامة</span>
                   </div>
                 </div>
                 <div class="setting-control">
@@ -857,6 +881,86 @@
                   </label>
                 </div>
               </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span>صوت الانتقال بين الإدارات</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="soundNavPage">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>صوت الانتقال بين التبويبات</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="soundNavTab">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div style="font-size:0.78rem;color:var(--text-secondary);padding:12px 0 10px;border-bottom:1px dashed var(--border);margin-bottom:10px;">
+                <i class="fa-solid fa-info-circle"></i> التنبيهات والأمان
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>صوت التحذيرات والأخطاء</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="soundWarning">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>صوت الإشعارات (دين / صلاحية / مخزون)</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="soundAlert">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>صوت تسجيل الدخول / الخروج</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="soundLogin">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -1816,6 +1920,9 @@ function switchTab(tabId) {
   document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
   document.getElementById(`tab-${tabId}`).classList.add('active');
 
+  // صوت الانتقال بين التبويبات
+  window.SoundManager?.play('nav-tab');
+
   // إخفاء شريط الحفظ في تبويبات لا تحتاجه
   const noSaveTabs = ['about', 'backup'];
   const saveBar = document.querySelector('.save-bar');
@@ -1830,6 +1937,7 @@ async function loadSettings() {
     'language', 'currency', 'dateFormat',
     'themeColor', 'bgMode', 'appFont', 'fontSize',
     'soundAdd', 'soundSell', 'soundButtons',
+    'soundNavPage', 'soundNavTab', 'soundWarning', 'soundOutOfStock', 'soundAlert', 'soundLogin',
     'storeName', 'storePhone', 'storeAddress', 'storeWelcome', 'storeLogo',
     'paperSize', 'printLogo', 'printName', 'printPhone', 'printAddress', 'printWelcome', 'printBarcode',
     'printerInvoice', 'printerBarcode',
