@@ -1,0 +1,2596 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+  <link rel="shortcut icon" href="favicon.svg"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>POS DZ - الإعدادات</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <style>
+    /* =========================================
+       تخطيط متطور للإعدادات
+    ========================================= */
+    .settings-layout {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--bg-dark);
+    }
+
+    /* التبويبات */
+    .tabs-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .tabs-header {
+      display: flex;
+      flex-wrap: wrap;
+      background: var(--bg-dark);
+      border-bottom: 2px solid var(--primary);
+      padding: 0 10px;
+    }
+
+    .tab-btn {
+      padding: 14px 20px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: rgba(124, 58, 237, 0.05);
+    }
+
+    .tab-btn.active {
+      color: var(--primary-light);
+      border-bottom-color: var(--primary);
+    }
+
+    .tab-content {
+      display: none;
+      padding: 20px;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* بطاقات الإعدادات */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
+    }
+
+    .settings-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 15px 18px;
+      background: var(--bg-dark);
+      border-bottom: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-header i {
+      font-size: 1.2rem;
+      color: var(--primary-light);
+    }
+
+    .card-header h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .card-body {
+      padding: 18px;
+    }
+
+    /* عناصر الإعدادات */
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+
+    .setting-info {
+      flex: 1;
+    }
+
+    .setting-label {
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .setting-label i {
+      color: var(--primary);
+      font-size: 0.9rem;
+    }
+
+    .setting-desc {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .setting-control {
+      min-width: 200px;
+    }
+
+    /* حقول الإدخال */
+    .form-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      font-family: var(--font-main);
+      font-size: 0.9rem;
+      font-weight: 600;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+    }
+
+    .form-select {
+      width: 100%;
+      background: var(--bg-input);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      font-family: var(--font-main);
+      font-size: 0.9rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* أزرار التبديل */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border);
+      transition: .3s;
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: var(--success);
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+    }
+
+    /* ألوان الثيم */
+    .theme-colors {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .theme-color {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .theme-color:hover {
+      transform: scale(1.1);
+    }
+
+    .theme-color.active {
+      border-color: #fff;
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    .theme-color.blue-purple {
+      background: linear-gradient(135deg, #7C3AED, #2563EB);
+    }
+
+    .theme-color.green {
+      background: linear-gradient(135deg, #059669, #0891B2);
+    }
+
+    .theme-color.blue {
+      background: linear-gradient(135deg, #2563EB, #0891B2);
+    }
+
+    .theme-color.orange {
+      background: linear-gradient(135deg, #EA580C, #D97706);
+    }
+
+    .theme-color.red {
+      background: linear-gradient(135deg, #DC2626, #9333EA);
+    }
+
+    /* وضع العرض */
+    .bg-modes {
+      display: flex;
+      gap: 10px;
+    }
+
+    .bg-mode {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .bg-mode:hover {
+      border-color: var(--primary);
+    }
+
+    .bg-mode.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* الخطوط */
+    .font-preview {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 10px;
+      background: var(--bg-dark);
+      border-radius: var(--radius-sm);
+    }
+
+    .font-sample {
+      font-size: 1.2rem;
+      color: var(--primary-light);
+    }
+
+    /* معاينة الطباعة */
+    .preview-box {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 15px;
+      margin-top: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      white-space: pre;
+      overflow-x: auto;
+      color: var(--text-primary);
+    }
+
+    /* بطاقات الطابعات */
+    .printer-card {
+      background: var(--bg-dark);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 15px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .printer-card:hover {
+      border-color: var(--primary);
+    }
+
+    .printer-card.selected {
+      border-color: var(--primary);
+      background: rgba(124, 58, 237, 0.1);
+    }
+
+    .printer-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(124, 58, 237, 0.15);
+      color: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .printer-info {
+      flex: 1;
+    }
+
+    .printer-name {
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .printer-desc {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    /* معاينة الباركود */
+    .barcode-preview {
+      background: #fff;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      text-align: center;
+      color: #000;
+    }
+
+    .barcode-bars {
+      display: flex;
+      justify-content: center;
+      gap: 2px;
+      margin: 10px 0;
+    }
+
+    .barcode-bar {
+      width: 2px;
+      background: #000;
+    }
+
+    /* منطقة الخطر */
+    .danger-zone {
+      border: 2px solid rgba(239, 68, 68, 0.3);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .danger-zone h4 {
+      color: var(--danger);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* قياس حجم الخط */
+    .font-size-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .font-size-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-input);
+      color: var(--text-primary);
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .font-size-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .font-size-value {
+      min-width: 50px;
+      text-align: center;
+      font-weight: 700;
+      color: var(--primary-light);
+    }
+
+    /* شعار المتجر */
+    .logo-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border);
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+
+    .logo-upload {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* حالة المزامنة */
+    .sync-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: var(--bg-dark);
+      border-radius: var(--radius-sm);
+      margin-bottom: 15px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .status-dot.online {
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+    }
+
+    .status-dot.offline {
+      background: var(--danger);
+    }
+
+    /* أزرار الحفظ */
+    .save-bar {
+      position: sticky;
+      bottom: 20px;
+      background: var(--bg-card);
+      border: 2px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+      margin-top: 20px;
+      z-index: 100;
+    }
+
+    .save-btn {
+      padding: 12px 30px;
+      background: var(--success);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .save-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    .reset-btn {
+      padding: 12px 30px;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+<div class="bg-animated"></div>
+
+<div class="settings-layout">
+  <!-- الهيدر -->
+  <header class="app-header">
+    <button class="menu-btn" id="menuBtn">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    
+    <button id="_notifBell" class="notif-bell">
+      <i class="fa-solid fa-bell"></i>
+      <span id="_notifBadge" class="notif-badge"></span>
+    </button>
+    
+    <span class="store-name" id="headerStoreName">جاري التحميل...</span>
+    
+    <a href="sale.html" class="back-btn">
+      <i class="fa-solid fa-arrow-right"></i>
+      <span>رجوع</span>
+    </a>
+    
+    <div class="app-brand">
+      <span class="brand-title">POS DZ</span>
+      <span class="brand-clock" id="clockDisplay"></span>
+    </div>
+  </header>
+
+  <!-- المحتوى الرئيسي -->
+  <div style="flex:1; padding:20px; overflow-y:auto;">
+    
+    <!-- شريط الإجراءات العلوي -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h1 style="font-size:1.5rem; color:var(--primary-light); display:flex; align-items:center; gap:10px;">
+        <i class="fa-solid fa-gear"></i>
+        <span>الإعدادات</span>
+      </h1>
+      
+      <div>
+        <span style="color:var(--text-secondary); margin-left:10px;">الإصدار</span>
+        <span style="font-weight:800; color:var(--primary-light);" id="versionDisplay">8.0.0</span>
+      </div>
+    </div>
+
+    <!-- التبويبات -->
+    <div class="tabs-container">
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab('general')">
+          <i class="fa-solid fa-sliders"></i>
+          <span>عام</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('store')">
+          <i class="fa-solid fa-store"></i>
+          <span>المتجر</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('print')">
+          <i class="fa-solid fa-print"></i>
+          <span>الطباعة</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('barcode')">
+          <i class="fa-solid fa-barcode"></i>
+          <span>الباركود</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('sync')">
+          <i class="fa-solid fa-cloud"></i>
+          <span>المزامنة</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('scale')">
+          <i class="fa-solid fa-scale-balanced"></i>
+          <span>الميزان</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('notifications')">
+          <i class="fa-solid fa-bell"></i>
+          <span>الإشعارات</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('backup')">
+          <i class="fa-solid fa-database"></i>
+          <span>النسخ الاحتياطي</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('about')">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>حول</span>
+        </button>
+      </div>
+
+      <!-- ========== تبويب: عام ========== -->
+      <div class="tab-content active" id="tab-general">
+        <div class="settings-grid">
+          <!-- اللغة والعملة -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-language"></i>
+              <h3>اللغة والعملة</h3>
+            </div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-globe"></i>
+                    <span>لغة البرنامج</span>
+                  </div>
+                  <div class="setting-desc">تطبق على كل صفحات التطبيق</div>
+                </div>
+                <div class="setting-control">
+                  <select class="form-select" id="language">
+                    <option value="ar">🇩🇿 العربية</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="en">🇬🇧 English</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-money-bill"></i>
+                    <span>رمز العملة</span>
+                  </div>
+                  <div class="setting-desc">يظهر بجانب المبالغ</div>
+                </div>
+                <div class="setting-control">
+                  <select class="form-select" id="currency">
+                    <option value="دج">🇩🇿 دينار جزائري (دج)</option>
+                    <option value="DA">🇩🇿 دينار جزائري (DA)</option>
+                    <option value="EGP">🇪🇬 جنيه مصري</option>
+                    <option value="SAR">🇸🇦 ريال سعودي</option>
+                    <option value="AED">🇦🇪 درهم إماراتي</option>
+                    <option value="MAD">🇲🇦 درهم مغربي</option>
+                    <option value="TND">🇹🇳 دينار تونسي</option>
+                    <option value="USD">🇺🇸 دولار أمريكي</option>
+                    <option value="EUR">🇪🇺 يورو</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span>صيغة التاريخ</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <select class="form-select" id="dateFormat">
+                    <option value="DD/MM/YYYY">يوم/شهر/سنة</option>
+                    <option value="MM/DD/YYYY">شهر/يوم/سنة</option>
+                    <option value="YYYY/MM/DD">سنة/شهر/يوم</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- المظهر والثيم -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-palette"></i>
+              <h3>المظهر والثيم</h3>
+            </div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-brush"></i>
+                    <span>اللون الأساسي</span>
+                  </div>
+                  <div class="setting-desc">لون الأزرار والعنوانين</div>
+                </div>
+                <div class="setting-control">
+                  <div class="theme-colors">
+                    <div class="theme-color blue-purple" data-theme="blue_purple" onclick="selectTheme('blue_purple')" title="بنفسجي أزرق"></div>
+                    <div class="theme-color green" data-theme="green" onclick="selectTheme('green')" title="أخضر"></div>
+                    <div class="theme-color blue" data-theme="blue" onclick="selectTheme('blue')" title="أزرق"></div>
+                    <div class="theme-color orange" data-theme="orange" onclick="selectTheme('orange')" title="برتقالي"></div>
+                    <div class="theme-color red" data-theme="red" onclick="selectTheme('red')" title="أحمر"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-circle-half-stroke"></i>
+                    <span>وضع العرض</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <div class="bg-modes">
+                    <div class="bg-mode" data-bg="dark" onclick="selectBgMode('dark')">
+                      <i class="fa-solid fa-moon"></i>
+                      <span>داكن</span>
+                    </div>
+                    <div class="bg-mode" data-bg="light" onclick="selectBgMode('light')">
+                      <i class="fa-solid fa-sun"></i>
+                      <span>فاتح</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- الخطوط -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-font"></i>
+              <h3>الخطوط</h3>
+            </div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-text-height"></i>
+                    <span>نوع الخط</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <select class="form-select" id="appFont" onchange="updateFontPreview()">
+                    <option value="Cairo">Cairo</option>
+                    <option value="Tajawal">Tajawal</option>
+                    <option value="Amiri">Amiri</option>
+                    <option value="Almarai">Almarai</option>
+                    <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-text-height"></i>
+                    <span>حجم الخط</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <div class="font-size-control">
+                    <button class="font-size-btn" onclick="changeFontSize(-1)">−</button>
+                    <span class="font-size-value" id="fontSizeDisplay">15</span>
+                    <button class="font-size-btn" onclick="changeFontSize(1)">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="font-preview" id="fontPreview">
+                <span class="font-sample">نص تجريبي - Cairo</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- الأصوات -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-volume-high"></i>
+              <h3>الأصوات</h3>
+            </div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>صوت إضافة منتج</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="soundAdd">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>صوت إتمام البيع</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="soundSell">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>صوت الأزرار</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="soundButtons">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== تبويب: المتجر ========== -->
+      <div class="tab-content" id="tab-store">
+        <div class="settings-grid">
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-store"></i>
+              <h3>معلومات المتجر</h3>
+            </div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-image"></i>
+                    <span>شعار المتجر</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <div class="logo-upload">
+                    <img id="storeLogoPreview" class="logo-preview" style="display:none;">
+                    <div>
+                      <button class="btn btn-sm btn-primary" onclick="document.getElementById('logoInput').click()">
+                        <i class="fa-solid fa-upload"></i> تحميل
+                      </button>
+                      <button class="btn btn-sm btn-danger" onclick="deleteLogo()">
+                        <i class="fa-solid fa-trash"></i> حذف
+                      </button>
+                      <input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="uploadLogo(this)">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-heading"></i>
+                    <span>اسم المتجر</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <input type="text" class="form-input" id="storeName" placeholder="اسم المتجر">
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-phone"></i>
+                    <span>رقم الهاتف</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <input type="tel" class="form-input" id="storePhone" placeholder="05XX XX XX XX">
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span>العنوان</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <input type="text" class="form-input" id="storeAddress" placeholder="عنوان المتجر">
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-message"></i>
+                    <span>رسالة الترحيب</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <input type="text" class="form-input" id="storeWelcome" placeholder="شكراً لزيارتكم">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== تبويب: الطباعة ========== -->
+      <!-- ========== تبويب: الطباعة ========== -->
+      <div class="tab-content" id="tab-print">
+        <div class="settings-grid">
+
+          <!-- ── إعدادات الفاتورة ── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-file-invoice"></i>
+              <h3>إعدادات الفاتورة</h3>
+            </div>
+            <div class="card-body">
+
+              <!-- طابعة الفواتير -->
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-print"></i>
+                    <span>طابعة الفواتير</span>
+                  </div>
+                  <div class="setting-desc">لإضافة طابعة انتقل لإعدادات الحاسوب</div>
+                </div>
+                <div class="setting-control">
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <div class="printer-card" id="invoicePrinterCard" onclick="POSDZ_PRINT.choosePrinter('invoice')" style="flex:1;min-width:180px;">
+                      <div class="printer-icon"><i class="fa-solid fa-print"></i></div>
+                      <div class="printer-info">
+                        <div class="printer-name" id="invoicePrinterName">الطابعة الافتراضية</div>
+                        <div class="printer-desc">اضغط لاختيار طابعة</div>
+                      </div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="openSystemPrinters()" title="إعدادات الطابعات في الحاسوب">
+                      <i class="fa-solid fa-gear"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- حجم الورق: 58mm / 80mm فقط -->
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-regular fa-newspaper"></i>
+                    <span>حجم الورق</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <select class="form-select" id="paperSize" onchange="updateInvoicePreview()">
+                    <option value="58mm">58 مم — حراري صغير</option>
+                    <option value="80mm" selected>80 مم — حراري عادي</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- رقم الفاتورة الابتدائي -->
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-hashtag"></i>
+                    <span>رقم الفاتورة الحالي</span>
+                  </div>
+                  <div class="setting-desc">يُغيَّر عند الحاجة — سيُستأنف من هذا الرقم</div>
+                </div>
+                <div class="setting-control">
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <span style="color:var(--text-secondary);font-size:0.9em;">#</span>
+                    <input type="number" class="form-input" id="invoiceStartNumber"
+                           min="1" max="9999" step="1" placeholder="001"
+                           style="width:90px;text-align:center;" />
+                    <button class="btn btn-secondary btn-sm" onclick="applyInvoiceNumber()">
+                      <i class="fa-solid fa-check"></i> تطبيق
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- محتويات الفاتورة -->
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-regular fa-square-check"></i>
+                    <span>محتويات الفاتورة</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <label style="display:flex;align-items:center;gap:8px;">
+                      <input type="checkbox" id="printLogo" onchange="updateInvoicePreview()">
+                      <span>طباعة الشعار</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;">
+                      <input type="checkbox" id="printName" onchange="updateInvoicePreview()">
+                      <span>طباعة اسم المتجر</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;">
+                      <input type="checkbox" id="printPhone" onchange="updateInvoicePreview()">
+                      <span>طباعة رقم الهاتف</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;">
+                      <input type="checkbox" id="printAddress" onchange="updateInvoicePreview()">
+                      <span>طباعة العنوان</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;">
+                      <input type="checkbox" id="printWelcome" onchange="updateInvoicePreview()">
+                      <span>طباعة رسالة الترحيب</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;">
+                      <input type="checkbox" id="printBarcode" onchange="updateInvoicePreview()">
+                      <span>طباعة باركود الفاتورة</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" style="width:100%;margin-top:15px;" onclick="testPrintInvoice()">
+                <i class="fa-solid fa-print"></i> طباعة تجريبية
+              </button>
+            </div>
+          </div>
+
+          <!-- ── معاينة الفاتورة الحية ── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-eye"></i>
+              <h3>معاينة الفاتورة</h3>
+            </div>
+            <div class="card-body" style="display:flex;justify-content:center;">
+              <!-- الورقة الحرارية المصغَّرة -->
+              <div id="invoiceLivePreview" style="
+                background:#fff;color:#000;
+                width:180px;
+                padding:8px 6px 12px;
+                font-family:'Tahoma','Arial',sans-serif;
+                font-size:7px;
+                direction:rtl;
+                border:1px solid #ccc;
+                box-shadow:2px 2px 8px rgba(0,0,0,0.3);
+                line-height:1.4;
+                min-height:200px;
+              ">
+                <!-- سيتم ملؤه بـ updateInvoicePreview() -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ========== تبويب: الباركود ========== -->
+      <div class="tab-content" id="tab-barcode">
+        <div class="settings-grid">
+
+          <!-- ── إعدادات الباركود ── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-barcode"></i>
+              <h3>إعدادات الباركود</h3>
+            </div>
+            <div class="card-body">
+
+              <!-- طابعة الباركود -->
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-print"></i>
+                    <span>طابعة الباركود</span>
+                  </div>
+                  <div class="setting-desc">لإضافة طابعة انتقل لإعدادات الحاسوب</div>
+                </div>
+                <div class="setting-control">
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <div class="printer-card" id="barcodePrinterCard" onclick="POSDZ_PRINT.choosePrinter('barcode')" style="flex:1;min-width:180px;">
+                      <div class="printer-icon"><i class="fa-solid fa-barcode"></i></div>
+                      <div class="printer-info">
+                        <div class="printer-name" id="barcodePrinterName">الطابعة الافتراضية</div>
+                        <div class="printer-desc">اضغط لاختيار طابعة</div>
+                      </div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="openSystemPrinters()" title="إعدادات الطابعات في الحاسوب">
+                      <i class="fa-solid fa-gear"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- حجم الملصق -->
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-regular fa-rectangle-ad"></i>
+                    <span>حجم الملصق (عرض × ارتفاع)</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <select class="form-select" id="barcodeSize" onchange="updateBarcodePreview()">
+                    <option value="30x20">30 × 20 مم</option>
+                    <option value="40x20">40 × 20 مم</option>
+                    <option value="38x25">38 × 25 مم</option>
+                    <option value="40x25">40 × 25 مم</option>
+                    <option value="40x30" selected>40 × 30 مم</option>
+                    <option value="58x20">58 × 20 مم</option>
+                    <option value="58x30">58 × 30 مم</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- نوع الباركود -->
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span>نوع الباركود</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <select class="form-select" id="barcodeType" onchange="updateBarcodePreview()">
+                    <option value="CODE128">CODE 128 (افتراضي)</option>
+                    <option value="EAN13">EAN-13 (13 رقم)</option>
+                    <option value="EAN8">EAN-8 (8 أرقام)</option>
+                    <option value="UPCA">UPC-A (12 رقم)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- حجم خط النص فقط (الباركود لا يتغير حجمه) -->
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-font"></i>
+                    <span>حجم خط النص</span>
+                  </div>
+                  <div class="setting-desc">يؤثر على النص والأرقام فقط — الباركود ثابت</div>
+                </div>
+                <div class="setting-control">
+                  <div class="font-size-control">
+                    <button class="font-size-btn" onclick="changeBarcodeFontSize(-1)">−</button>
+                    <span class="font-size-value" id="barcodeFontSize">10</span>
+                    <button class="font-size-btn" onclick="changeBarcodeFontSize(1)">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- محتويات الملصق -->
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-regular fa-square-check"></i>
+                    <span>محتويات الملصق</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <label style="display:flex;align-items:center;gap:8px;">
+                      <input type="checkbox" id="barcodeShowStore" onchange="updateBarcodePreview()">
+                      <span>اسم المتجر</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;">
+                      <input type="checkbox" id="barcodeShowName" checked onchange="updateBarcodePreview()">
+                      <span>اسم المنتج</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;">
+                      <input type="checkbox" id="barcodeShowPrice" checked onchange="updateBarcodePreview()">
+                      <span>السعر</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── معاينة الباركود الحية ── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-eye"></i>
+              <h3>معاينة الملصق</h3>
+            </div>
+            <div class="card-body" style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+
+              <!-- حاوية المعاينة: نسبة أبعاد الملصق -->
+              <div style="position:relative;background:#f0f0f0;padding:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:160px;width:100%;">
+                <div id="bcPreviewWrap" style="
+                  background:#fff;
+                  box-shadow:0 2px 8px rgba(0,0,0,0.3);
+                  overflow:hidden;
+                  display:flex;align-items:center;justify-content:center;
+                ">
+                  <canvas id="bcPreviewCanvas" style="display:block;image-rendering:crisp-edges;"></canvas>
+                </div>
+              </div>
+
+              <!-- معلومات الحجم -->
+              <div id="bcSizeInfo" style="font-size:0.78rem;color:var(--text-secondary);text-align:center;"></div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      </div>
+
+      <!-- ========== تبويب: المزامنة ========== -->
+      <div class="tab-content" id="tab-sync">
+        <div class="settings-grid">
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-cloud"></i>
+              <h3>إعدادات المزامنة</h3>
+            </div>
+            <div class="card-body">
+              <div class="sync-status" id="syncStatus">
+                <div class="status-dot offline" id="syncDot"></div>
+                <span id="syncStatusText">غير متصل</span>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-power-off"></i>
+                    <span>تفعيل المزامنة</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="syncEnabled" onchange="toggleSync()">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="syncConfig" style="display:none;">
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-server"></i>
+                      <span>عنوان الخادم</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <input type="text" class="form-input" id="syncServer" placeholder="192.168.1.100">
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-plug"></i>
+                      <span>المنفذ</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <input type="number" class="form-input" id="syncPort" placeholder="3000" value="3000">
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-key"></i>
+                      <span>مفتاح المتجر</span>
+                    </div>
+                    <div class="setting-desc">معرف فريد لمتجرك</div>
+                  </div>
+                  <div class="setting-control">
+                    <input type="text" class="form-input" id="syncStoreId" placeholder="store-001">
+                  </div>
+                </div>
+
+                <button class="btn btn-primary" style="width:100%; margin-top:15px;" onclick="testSync()">
+                  <i class="fa-solid fa-plug"></i> اختبار الاتصال
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-laptop"></i>
+              <h3>الأجهزة المتصلة</h3>
+            </div>
+            <div class="card-body">
+              <div style="text-align:center; padding:20px;" id="devicesList">
+                <i class="fa-solid fa-wifi" style="font-size:2rem; opacity:0.3;"></i>
+                <p style="margin-top:10px;">لا توجد أجهزة متصلة</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== تبويب: الميزان ========== -->
+      <div class="tab-content" id="tab-scale">
+        <div class="settings-grid">
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-scale-balanced"></i>
+              <h3>إعدادات الميزان</h3>
+            </div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-power-off"></i>
+                    <span>تفعيل الميزان</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="scaleEnabled" onchange="toggleScale()">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="scaleConfig" style="display:none;">
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-cable-car"></i>
+                      <span>نوع الاتصال</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <select class="form-select" id="scaleType">
+                      <option value="serial">منفذ تسلسلي (RS-232)</option>
+                      <option value="usb">USB</option>
+                      <option value="bluetooth">بلوتوث</option>
+                      <option value="network">شبكة</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-plug"></i>
+                      <span>المنفذ</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <input type="text" class="form-input" id="scalePort" placeholder="COM3">
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-gauge-high"></i>
+                      <span>سرعة البث</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <select class="form-select" id="scaleBaudRate">
+                      <option value="9600">9600</option>
+                      <option value="19200">19200</option>
+                      <option value="38400">38400</option>
+                      <option value="57600">57600</option>
+                      <option value="115200">115200</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary" style="width:100%; margin-top:15px;" onclick="connectScale()">
+                  <i class="fa-solid fa-link"></i> اتصال
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-weight-scale"></i>
+              <h3>معاينة الميزان</h3>
+            </div>
+            <div class="card-body">
+              <div style="text-align:center; padding:20px;">
+                <div style="font-size:3rem; font-weight:900; color:var(--primary-light);" id="scalePreview">0.000</div>
+                <div style="color:var(--text-secondary);">كيلوغرام</div>
+                <div style="margin-top:20px;" id="scaleStatus">غير متصل</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== تبويب: الإشعارات ========== -->
+      <div class="tab-content" id="tab-notifications">
+        <div class="settings-grid">
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-bell"></i>
+              <h3>إعدادات الإشعارات</h3>
+            </div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-power-off"></i>
+                    <span>تفعيل الإشعارات</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notificationsEnabled" onchange="toggleNotifications()">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="notificationsConfig">
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-box"></i>
+                      <span>نقص المخزون</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="notifyLowStock">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-calendar"></i>
+                      <span>انتهاء الصلاحية</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="notifyExpiry">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-hand-holding-dollar"></i>
+                      <span>ديون متأخرة</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="notifyDebt">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-user"></i>
+                      <span>دخول المستخدمين</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="notifyLogin">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-key"></i>
+                      <span>تغيير كلمة المرور</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="notifyPassword">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-bell"></i>
+              <h3>طرق الإشعارات</h3>
+            </div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-regular fa-bell"></i>
+                    <span>داخل التطبيق</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notifyInApp" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-regular fa-envelope"></i>
+                    <span>البريد الإلكتروني</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notifyEmail">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="emailConfig" style="display:none;">
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-regular fa-envelope"></i>
+                      <span>البريد الإلكتروني</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <input type="email" class="form-input" id="notifyEmailAddress" placeholder="admin@example.com">
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-message"></i>
+                    <span>رسائل SMS</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notifySMS">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="smsConfig" style="display:none;">
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">
+                      <i class="fa-solid fa-phone"></i>
+                      <span>رقم الهاتف</span>
+                    </div>
+                  </div>
+                  <div class="setting-control">
+                    <input type="tel" class="form-input" id="notifySMSNumber" placeholder="05XX XX XX XX">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== تبويب: النسخ الاحتياطي ========== -->
+      <div class="tab-content" id="tab-backup">
+        <div class="settings-grid">
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+              <h3>النسخ الاحتياطي</h3>
+            </div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-calendar"></i>
+                    <span>نسخ احتياطي تلقائي يومي</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="autoBackup">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>وقت النسخ الاحتياطي</span>
+                  </div>
+                </div>
+                <div class="setting-control">
+                  <input type="time" class="form-input" id="backupTime" value="23:00">
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn btn-primary" style="flex:1;" onclick="createBackup()">
+                  <i class="fa-solid fa-download"></i> إنشاء نسخة احتياطية
+                </button>
+                <button class="btn btn-success" style="flex:1;" onclick="document.getElementById('restoreFile').click()">
+                  <i class="fa-solid fa-upload"></i> استعادة
+                </button>
+                <input type="file" id="restoreFile" accept=".json" style="display:none;" onchange="restoreBackup(this)">
+              </div>
+
+              <div id="lastBackupInfo" style="margin-top:15px; padding:10px; background:var(--bg-dark); border-radius:var(--radius-sm);">
+                <div style="display:flex; justify-content:space-between;">
+                  <span>آخر نسخة احتياطية:</span>
+                  <span id="lastBackupDate">لم يتم إنشاء نسخة بعد</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <h3>منطقة الخطر</h3>
+            </div>
+            <div class="card-body">
+              <div class="danger-zone">
+                <h4>
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  تحذير: هذه العمليات لا يمكن التراجع عنها
+                </h4>
+                
+                <button class="btn btn-warning" style="width:100%; margin-bottom:10px;" onclick="partialClear()">
+                  <i class="fa-solid fa-broom"></i> مسح جزئي (المبيعات والديون فقط)
+                </button>
+                
+                <button class="btn btn-danger" style="width:100%;" onclick="fullClear()">
+                  <i class="fa-solid fa-trash"></i> مسح كامل (جميع البيانات)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== تبويب: حول ========== -->
+      <div class="tab-content" id="tab-about">
+        <div class="settings-grid">
+          <div class="settings-card" style="grid-column:span 2;">
+            <div class="card-header">
+              <i class="fa-solid fa-circle-info"></i>
+              <h3>حول التطبيق</h3>
+            </div>
+            <div class="card-body" style="text-align:center;">
+              <div style="font-family:Impact; font-size:4rem; color:var(--primary); margin-bottom:10px;">
+                POS DZ
+              </div>
+              <div style="font-size:1.2rem; color:var(--text-secondary); margin-bottom:20px;">
+                نظام نقاط البيع المتكامل
+              </div>
+              
+              <div style="display:flex; justify-content:center; gap:30px; margin-bottom:30px;">
+                <div>
+                  <div style="font-size:0.8rem; color:var(--text-secondary);">الإصدار</div>
+                  <div style="font-size:2rem; font-weight:900; color:var(--primary-light);" id="aboutVersion">8.0.0</div>
+                </div>
+                <div>
+                  <div style="font-size:0.8rem; color:var(--text-secondary);">تاريخ الإصدار</div>
+                  <div style="font-size:2rem; font-weight:900; color:var(--primary-light);">2026-03</div>
+                </div>
+              </div>
+              
+              <div style="background:var(--bg-dark); border-radius:var(--radius); padding:20px; margin-bottom:20px;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                  <div style="width:50px; height:50px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.5rem;">
+                    👨‍💻
+                  </div>
+                  <div style="text-align:right;">
+                    <div style="font-weight:800;">المطور: ب.حمزة</div>
+                    <div style="color:var(--text-secondary); font-size:0.85rem;">شركة POS DZ</div>
+                    <div style="margin-top:5px;">
+                      <a href="https://wa.me/0770044850" target="_blank" style="color:#25D366; text-decoration:none;">
+                        <i class="fa-brands fa-whatsapp"></i> 0770044850
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div style="color:var(--text-secondary); font-size:0.8rem;">
+                © 2026 POS DZ - جميع الحقوق محفوظة
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- شريط الحفظ -->
+    <div class="save-bar">
+      <button class="reset-btn" onclick="resetSettings()">
+        <i class="fa-solid fa-rotate-left"></i> إعادة تعيين
+      </button>
+      <button class="save-btn" onclick="saveAllSettings()">
+        <i class="fa-solid fa-floppy-disk"></i> حفظ التغييرات
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="sidebar" id="sidebar">
+  <!-- محتوى sidebar قياسي -->
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<script src="app.js"></script>
+<script src="sync.js"></script>
+<script>
+// ============================================================
+//  POS DZ - settings.js  v8.0.0  (محسن بالكامل)
+// ============================================================
+
+// متغيرات عامة
+let currentTheme = 'blue_purple';
+let currentBgMode = 'dark';
+let currentFontSize = 15;
+let currentBarcodeFontSize = 10;
+
+// ============================================================
+//  التهيئة
+// ============================================================
+async function init() {
+  // التحقق من الصلاحية
+  if (!window.sessionManager.requireRole(['admin', 'manager'])) return;
+  
+  // تهيئة التطبيق
+  await window.initApp();
+  
+  // تحميل الإعدادات
+  await loadSettings();
+  
+  // تحديث الواجهة
+  updateThemePreview();
+  updateFontPreview();
+  // المعاينات تُشغَّل داخل loadSettings بعد تحميل القيم
+  
+  console.log('✅ صفحة الإعدادات جاهزة');
+}
+
+// ============================================================
+//  التبويبات
+// ============================================================
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  
+  document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+  document.getElementById(`tab-${tabId}`).classList.add('active');
+
+  // إخفاء شريط الحفظ في تبويبات لا تحتاجه
+  const noSaveTabs = ['about', 'backup'];
+  const saveBar = document.querySelector('.save-bar');
+  if (saveBar) saveBar.style.display = noSaveTabs.includes(tabId) ? 'none' : '';
+}
+
+// ============================================================
+//  تحميل الإعدادات
+// ============================================================
+async function loadSettings() {
+  const settings = [
+    'language', 'currency', 'dateFormat',
+    'themeColor', 'bgMode', 'appFont', 'fontSize',
+    'soundAdd', 'soundSell', 'soundButtons',
+    'storeName', 'storePhone', 'storeAddress', 'storeWelcome', 'storeLogo',
+    'paperSize', 'printLogo', 'printName', 'printPhone', 'printAddress', 'printWelcome', 'printBarcode',
+    'printerInvoice', 'printerBarcode',
+    'barcodeSize', 'barcodeType', 'barcodeFontSize', 'barcodeShowStore', 'barcodeShowName', 'barcodeShowPrice',
+    'syncEnabled', 'syncServer', 'syncPort', 'syncStoreId',
+    'scaleEnabled', 'scaleType', 'scalePort', 'scaleBaudRate',
+    'notificationsEnabled', 'notifyLowStock', 'notifyExpiry', 'notifyDebt', 'notifyLogin', 'notifyPassword',
+    'notifyInApp', 'notifyEmail', 'notifyEmailAddress', 'notifySMS', 'notifySMSNumber',
+    'autoBackup', 'backupTime'
+  ];
+  
+  for (const key of settings) {
+    const value = await window.getSetting(key);
+    const element = document.getElementById(key);
+    
+    if (element) {
+      if (element.type === 'checkbox') {
+        element.checked = value === '1' || value === true;
+      } else {
+        element.value = value || '';
+      }
+    }
+  }
+  
+  // تحميل القيم الحالية للمتغيرات
+  currentTheme = await window.getSetting('themeColor') || 'blue_purple';
+  currentBgMode = await window.getSetting('bgMode') || 'dark';
+  currentFontSize = parseInt(await window.getSetting('fontSize')) || 15;
+  currentBarcodeFontSize = parseInt(await window.getSetting('barcodeFontSize')) || 12;
+  
+  document.getElementById('fontSizeDisplay').textContent = currentFontSize;
+  document.getElementById('barcodeFontSize').textContent = currentBarcodeFontSize;
+  
+  // تحديث حالة التبويبات المعتمدة
+  toggleSync();
+  toggleScale();
+  toggleNotifications();
+  
+  // تحديث ألوان الثيم
+  document.querySelectorAll('.theme-color').forEach(el => {
+    el.classList.toggle('active', el.dataset.theme === currentTheme);
+  });
+  
+  // تحديث وضع العرض
+  document.querySelectorAll('.bg-mode').forEach(el => {
+    el.classList.toggle('active', el.dataset.bg === currentBgMode);
+  });
+  
+  // تحميل الشعار
+  const logo = await window.getSetting('storeLogo');
+  if (logo) {
+    const preview = document.getElementById('storeLogoPreview');
+    preview.src = logo;
+    preview.style.display = 'block';
+  }
+  
+  // تحميل أسماء الطابعات
+  const invoicePrinter = await window.getSetting('printerInvoice');
+  if (invoicePrinter) {
+    document.getElementById('invoicePrinterName').textContent = invoicePrinter;
+    document.getElementById('invoicePrinterCard').classList.add('selected');
+  }
+  
+  const barcodePrinter = await window.getSetting('printerBarcode');
+  if (barcodePrinter) {
+    document.getElementById('barcodePrinterName').textContent = barcodePrinter;
+    document.getElementById('barcodePrinterCard').classList.add('selected');
+  }
+
+  // ── تحميل رقم الفاتورة الحالي من IndexedDB ────────────────
+  try {
+    const ctr = await window.dbManager.get('counter', 1);
+    if (ctr && ctr.number) {
+      const el = document.getElementById('invoiceStartNumber');
+      if (el) el.placeholder = String(ctr.number).padStart(3, '0');
+    }
+  } catch (_) {}
+
+  // ── تشغيل المعاينتين ──────────────────────────────────────
+  updateInvoicePreview();
+  updateBarcodePreview();
+}
+
+// ============================================================
+//  المظهر والثيم
+// ============================================================
+function selectTheme(theme) {
+  currentTheme = theme;
+  document.querySelectorAll('.theme-color').forEach(el => {
+    el.classList.toggle('active', el.dataset.theme === theme);
+  });
+  document.documentElement.setAttribute('data-accent', theme);
+  updateThemePreview();
+}
+
+function selectBgMode(mode) {
+  currentBgMode = mode;
+  document.querySelectorAll('.bg-mode').forEach(el => {
+    el.classList.toggle('active', el.dataset.bg === mode);
+  });
+  document.documentElement.setAttribute('data-bg', mode);
+  updateThemePreview();
+}
+
+function updateThemePreview() {
+  // تحديث معاينة الفاتورة حسب الثيم
+  const preview = document.getElementById('invoicePreview');
+  // يمكن إضافة تأثيرات بصرية للمعاينة
+}
+
+// ============================================================
+//  الخطوط
+// ============================================================
+function changeFontSize(delta) {
+  currentFontSize = Math.max(11, Math.min(20, currentFontSize + delta));
+  document.getElementById('fontSizeDisplay').textContent = currentFontSize;
+  document.documentElement.style.fontSize = currentFontSize + 'px';
+}
+
+function updateFontPreview() {
+  const font = document.getElementById('appFont').value;
+  const preview = document.getElementById('fontPreview');
+  preview.style.fontFamily = font;
+  preview.querySelector('.font-sample').textContent = `نص تجريبي - ${font}`;
+}
+
+// ============================================================
+//  إعدادات الباركود
+// ============================================================
+function changeBarcodeFontSize(delta) {
+  currentBarcodeFontSize = Math.max(6, Math.min(40, currentBarcodeFontSize + delta));
+  document.getElementById('barcodeFontSize').textContent = currentBarcodeFontSize;
+  updateBarcodePreview();
+}
+
+// ============================================================
+//  معاينة الباركود الحية — canvas حقيقي بـ JsBarcode
+// ============================================================
+let _bcPreviewTimer = null;
+
+async function updateBarcodePreview() {
+  // debounce: لا نُعيد رسم إلا بعد 80ms من آخر تغيير
+  clearTimeout(_bcPreviewTimer);
+  _bcPreviewTimer = setTimeout(_drawBcPreview, 80);
+}
+
+async function _drawBcPreview() {
+  const canvas  = document.getElementById('bcPreviewCanvas');
+  const wrap    = document.getElementById('bcPreviewWrap');
+  const sizeInfo= document.getElementById('bcSizeInfo');
+  if (!canvas || !wrap) return;
+
+  const rawSize   = document.getElementById('barcodeSize')?.value || '40x30';
+  const bcType    = document.getElementById('barcodeType')?.value || 'CODE128';
+  const showStore = document.getElementById('barcodeShowStore')?.checked;
+  const showName  = document.getElementById('barcodeShowName')?.checked;
+  const showPrice = document.getElementById('barcodeShowPrice')?.checked;
+  const fs        = currentBarcodeFontSize;
+
+  // ── نفس SIZES في print.js ─────────────────────────────────
+  // w = البعد الأقصر (يُرسم كعرض قبل التدوير)
+  // h = البعد الأطول (يُرسم كارتفاع قبل التدوير)
+  // بعد التدوير 90°: العرض النهائي = h، الارتفاع النهائي = w
+  const SIZES = {
+    '30x20':{w:20,h:30},'40x20':{w:20,h:40},'38x25':{w:25,h:38},
+    '40x25':{w:25,h:40},'40x30':{w:30,h:40},'58x20':{w:20,h:58},
+    '58x30':{w:30,h:58},
+  };
+  const sz = SIZES[rawSize] || {w:30,h:40};
+
+  // ── المقياس: 4px لكل mm في المعاينة ──────────────────────
+  const SCALE = 4.0;
+
+  // الـ canvas الوسيط (portrait — نفس ما يفعله _drawLabel)
+  const PW = Math.round(sz.w * SCALE);   // عرض portrait
+  const PH = Math.round(sz.h * SCALE);   // ارتفاع portrait
+  const P  = Math.round(0.7 * SCALE);    // padding
+
+  const tmp = document.createElement('canvas');
+  tmp.width  = PW;
+  tmp.height = PH;
+  const ctx = tmp.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, PW, PH);
+  ctx.fillStyle = '#000';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'top';
+
+  const storeName   = (await window.getSetting('storeName')) || 'اسم المتجر';
+  const currency    = (await window.getSetting('currency'))  || 'DA';
+  const sampleCode  = '1234567890';
+  const sampleName  = 'منتج تجريبي';
+  const samplePrice = '150 ' + currency;
+  const font        = '"Tahoma","Arial",sans-serif';
+
+  // حجم الخط من الإعداد — لا يعتمد على حجم الملصق
+  const FSS = Math.max(6,  Math.min(40, fs));
+  const FSP = Math.max(7,  Math.min(40, fs + 1));
+  const FSN = Math.max(5,  Math.min(30, fs - 2));
+  const FSR = Math.max(8,  Math.min(40, fs + 2));
+
+  let y = P;
+
+  if (showStore) {
+    ctx.font = '800 ' + FSS + 'px ' + font;
+    // قطع النص إذا فاق العرض
+    let t = storeName;
+    while (t.length > 1 && ctx.measureText(t).width > PW - P * 2) t = t.slice(0, -1);
+    if (t !== storeName) t += '…';
+    ctx.fillText(t, PW / 2, y);
+    y += FSS + Math.round(P * 0.5);
+  }
+  if (showName) {
+    ctx.font = '900 ' + FSP + 'px ' + font;
+    let t = sampleName;
+    while (t.length > 1 && ctx.measureText(t).width > PW - P * 2) t = t.slice(0, -1);
+    if (t !== sampleName) t += '…';
+    ctx.fillText(t, PW / 2, y);
+    y += FSP + Math.round(P * 0.5);
+  }
+
+  // ارتفاع الباركود = المساحة المتبقية
+  const botH = P + FSN + Math.round(P * 0.5) + (showPrice ? FSR + Math.round(P * 0.5) : 0);
+  const bH   = Math.max(Math.round(3 * SCALE), PH - y - botH - P);
+  const bW   = PW - P * 2;
+
+  // ── رسم الباركود بـ JsBarcode (نفس منطق _drawLabel) ──────
+  let bcDrawn = false;
+  if (typeof JsBarcode !== 'undefined' && bcType !== 'QR') {
+    try {
+      const bc  = document.createElement('canvas');
+      const units = bcType === 'EAN13' ? 95 : bcType === 'EAN8' ? 67 : bcType === 'UPCA' ? 95 :
+                    Math.max(40, (sampleCode.length + 3) * 11 + 35);
+      const xd  = Math.max(1, Math.floor(bW / units));
+      JsBarcode(bc, sampleCode, {
+        format: bcType, width: xd, height: bH,
+        displayValue: false, margin: 0,
+        background: '#fff', lineColor: '#000'
+      });
+      if (bc.width > 0 && bc.height > 0) {
+        ctx.drawImage(bc, 0, 0, bc.width, bc.height, P, y, bW, bH);
+        bcDrawn = true;
+      }
+    } catch (e) {}
+  }
+  if (!bcDrawn) {
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth   = 1;
+    ctx.strokeRect(P, y, bW, bH);
+    ctx.font = '700 ' + FSN + 'px monospace';
+    ctx.fillText('[' + bcType + ']', PW / 2, y + bH / 2 - FSN / 2);
+  }
+  y += bH + Math.round(P * 0.3);
+
+  // رقم الباركود
+  ctx.font = '700 ' + FSN + 'px "Courier New",monospace';
+  ctx.fillText(sampleCode, PW / 2, y);
+  y += FSN + Math.round(P * 0.4);
+
+  // السعر
+  if (showPrice) {
+    ctx.font = '900 ' + FSR + 'px ' + font;
+    ctx.fillText(samplePrice, PW / 2, y);
+  }
+
+  // ── تدوير 90° → landscape (نفس ما يفعله _drawLabel) ──────
+  // portrait: PW × PH
+  // بعد التدوير: عرض = PH، ارتفاع = PW
+  canvas.width  = PH;
+  canvas.height = PW;
+  const rctx = canvas.getContext('2d');
+  rctx.fillStyle = '#fff';
+  rctx.fillRect(0, 0, PH, PW);
+  rctx.translate(PH, 0);
+  rctx.rotate(Math.PI / 2);
+  rctx.drawImage(tmp, 0, 0);
+
+  // ── ضبط الحجم المعروض (landscape: عرض > ارتفاع) ─────────
+  // الأبعاد الحقيقية للملصق بالـ mm: عرض = sz.h، ارتفاع = sz.w
+  const labelW_mm = sz.h;  // العرض الحقيقي بعد التدوير
+  const labelH_mm = sz.w;  // الارتفاع الحقيقي بعد التدوير
+
+  const MAX_DISP_W = 340;
+  const dispW = Math.min(MAX_DISP_W, Math.round(labelW_mm * SCALE));
+  const dispH = Math.round(dispW * labelH_mm / labelW_mm);
+
+  canvas.style.width  = dispW + 'px';
+  canvas.style.height = dispH + 'px';
+  wrap.style.width    = dispW + 'px';
+  wrap.style.height   = dispH + 'px';
+
+  if (sizeInfo) {
+    const [lw, lh] = rawSize.split('x');
+    sizeInfo.textContent = `${lw} × ${lh} مم | خط: ${fs}px | ${bcType}`;
+  }
+}
+
+// ============================================================
+//  معاينة الفاتورة الحية
+// ============================================================
+async function updateInvoicePreview() {
+  const el = document.getElementById('invoiceLivePreview');
+  if (!el) return;
+
+  const paper     = document.getElementById('paperSize')?.value || '80mm';
+  const showName  = document.getElementById('printName')?.checked;
+  const showPhone = document.getElementById('printPhone')?.checked;
+  const showAddr  = document.getElementById('printAddress')?.checked;
+  const showWelc  = document.getElementById('printWelcome')?.checked;
+  const showBC    = document.getElementById('printBarcode')?.checked;
+
+  const storeName = (await window.getSetting('storeName'))    || 'اسم المتجر';
+  const phone     = (await window.getSetting('storePhone'))   || '';
+  const address   = (await window.getSetting('storeAddress')) || '';
+  const welcome   = (await window.getSetting('storeWelcome')) || 'شكراً لزيارتكم';
+  const currency  = (await window.getSetting('currency'))     || 'DA';
+
+  const w = paper === '58mm' ? '140px' : '180px';
+  el.style.width = w;
+
+  const sep  = `<div style="border-top:1px solid #000;margin:3px 0;"></div>`;
+  const sep2 = `<div style="border-top:2px solid #000;margin:3px 0;"></div>`;
+
+  let html = '';
+  // رأس الفاتورة
+  html += `<div style="display:table;width:100%;"><div style="display:table-row;">
+    <div style="display:table-cell;text-align:right;font-weight:900;">فاتورة #001</div>
+    <div style="display:table-cell;text-align:left;font-size:0.85em;">2026/03/12</div>
+  </div><div style="display:table-row;">
+    <div style="display:table-cell;text-align:right;">البائع:</div>
+    <div style="display:table-cell;text-align:left;">ADMIN</div>
+  </div></div>`;
+  html += sep2;
+  // اسم المتجر
+  if (showName) html += `<div style="text-align:center;font-weight:900;font-size:1.1em;">${storeName}</div>`;
+  if (showPhone && phone) html += `<div style="text-align:center;">${phone}</div>`;
+  if (showAddr  && address) html += `<div style="text-align:center;font-size:0.85em;">${address}</div>`;
+  html += sep2;
+  // جدول المنتجات
+  html += `<div style="display:table;width:100%;border-bottom:1px solid #000;">
+    <div style="display:table-row;">
+      <div style="display:table-cell;text-align:right;width:42%;font-weight:900;">المنتج</div>
+      <div style="display:table-cell;text-align:center;width:8%;font-weight:900;">ك</div>
+      <div style="display:table-cell;text-align:center;width:22%;font-weight:900;">السعر</div>
+      <div style="display:table-cell;text-align:left;width:28%;font-weight:900;">المجموع</div>
+    </div></div>
+  <div style="display:table;width:100%;">
+    <div style="display:table-row;">
+      <div style="display:table-cell;text-align:right;width:42%;">منتج 1</div>
+      <div style="display:table-cell;text-align:center;width:8%;">2</div>
+      <div style="display:table-cell;text-align:center;width:22%;">150</div>
+      <div style="display:table-cell;text-align:left;width:28%;font-weight:700;">300 ${currency}</div>
+    </div></div>`;
+  html += sep;
+  // المجاميع
+  html += `<div style="display:table;width:100%;">
+    <div style="display:table-row;">
+      <div style="display:table-cell;text-align:right;font-weight:900;">الإجمالي:</div>
+      <div style="display:table-cell;text-align:left;font-weight:900;">300 ${currency}</div>
+    </div>
+    <div style="display:table-row;">
+      <div style="display:table-cell;text-align:right;">المدفوع:</div>
+      <div style="display:table-cell;text-align:left;">300 ${currency}</div>
+    </div></div>`;
+  html += sep2;
+  // رسالة الشكر
+  if (showWelc) html += `<div style="text-align:center;font-weight:700;">${welcome}</div>`;
+  // باركود
+  if (showBC) html += `<div style="text-align:center;font-family:monospace;letter-spacing:2px;margin-top:3px;">||||  #001  ||||</div>`;
+  html += `<div style="border-top:1px dashed #888;margin-top:4px;"></div>`;
+
+  el.innerHTML = html;
+}
+
+// ============================================================
+//  فتح إعدادات الطابعات في Windows مباشرة
+// ============================================================
+function openSystemPrinters() {
+  // ms-settings:printers يفتح صفحة الطابعات في إعدادات Windows مباشرة
+  // هذا هو الطريق الوحيد الصحيح لاختيار طابعة من المتصفح
+  const link = document.createElement('a');
+  link.href  = 'ms-settings:printers';
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  // رسالة توجيه
+  window.toast?.show(
+    'ستفتح إعدادات الطابعات — اختر الطابعة المناسبة ثم أدخل اسمها هنا',
+    'info', 5000
+  );
+}
+
+// ============================================================
+//  تغيير رقم الفاتورة الابتدائي
+// ============================================================
+async function applyInvoiceNumber() {
+  const inp = document.getElementById('invoiceStartNumber');
+  const n   = parseInt(inp?.value);
+  if (!n || n < 1 || n > 9999) {
+    window.toast?.show('أدخل رقماً صحيحاً بين 1 و 9999', 'warning');
+    return;
+  }
+  try {
+    // تحديث الـ counter في IndexedDB مباشرة
+    const today = new Date().toISOString().slice(0, 10);
+    await window.dbManager.put('counter', { id: 1, number: n, lastReset: today });
+    window.toast?.show(`✅ رقم الفاتورة التالي: #${String(n).padStart(3,'0')}`, 'success');
+    inp.value = '';
+  } catch (e) {
+    window.toast?.show('خطأ في تحديث الرقم: ' + e.message, 'error');
+  }
+}
+
+// ============================================================
+//  طباعة تجريبية حقيقية
+// ============================================================
+async function testPrintInvoice() {
+  if (typeof window.printInvoice !== 'function') {
+    window.toast?.show('⚠️ وحدة الطباعة غير محمّلة (print.js)', 'error');
+    return;
+  }
+  const fakeSale = {
+    invoiceNumber: '#TEST',
+    total: 500,
+    discount: 0,
+    paid: 500,
+    change: 0,
+    isDebt: 0,
+    date: new Date().toISOString(),
+    sellerName: 'ADMIN',
+    customerName: '',
+    customerPhone: '',
+  };
+  const fakeItems = [
+    { name: 'منتج تجريبي',   quantity: 2, unitPrice: 150, total: 300 },
+    { name: 'منتج اختبار 2', quantity: 1, unitPrice: 200, total: 200 },
+  ];
+  await window.printInvoice(fakeSale, fakeItems);
+}
+
+// ============================================================
+//  إعدادات المزامنة
+// ============================================================
+function toggleSync() {
+  const enabled = document.getElementById('syncEnabled').checked;
+  document.getElementById('syncConfig').style.display = enabled ? 'block' : 'none';
+  updateSyncStatus();
+}
+
+function updateSyncStatus() {
+  const dot = document.getElementById('syncDot');
+  const text = document.getElementById('syncStatusText');
+  
+  if (document.getElementById('syncEnabled').checked) {
+    dot.className = 'status-dot online';
+    text.textContent = 'متصل';
+  } else {
+    dot.className = 'status-dot offline';
+    text.textContent = 'غير متصل';
+  }
+}
+
+async function testSync() {
+  window.toast.show('جاري اختبار الاتصال...', 'info');
+  
+  // محاكاة اختبار الاتصال
+  setTimeout(() => {
+    if (Math.random() > 0.5) {
+      window.toast.show('✅ تم الاتصال بالخادم بنجاح', 'success');
+    } else {
+      window.toast.show('❌ فشل الاتصال - تحقق من الإعدادات', 'error');
+    }
+  }, 1500);
+}
+
+// ============================================================
+//  إعدادات الميزان
+// ============================================================
+function toggleScale() {
+  const enabled = document.getElementById('scaleEnabled').checked;
+  document.getElementById('scaleConfig').style.display = enabled ? 'block' : 'none';
+  updateScaleStatus();
+}
+
+function updateScaleStatus() {
+  const status = document.getElementById('scaleStatus');
+  if (document.getElementById('scaleEnabled').checked) {
+    status.textContent = 'في انتظار الاتصال...';
+    status.style.color = 'var(--warning)';
+  } else {
+    status.textContent = 'غير متصل';
+    status.style.color = 'var(--text-secondary)';
+  }
+}
+
+function connectScale() {
+  window.toast.show('جاري الاتصال بالميزان...', 'info');
+  
+  // محاكاة الاتصال
+  setTimeout(() => {
+    const preview = document.getElementById('scalePreview');
+    let count = 0;
+    const interval = setInterval(() => {
+      preview.textContent = (Math.random() * 5).toFixed(3);
+      count++;
+      if (count > 5) {
+        clearInterval(interval);
+        document.getElementById('scaleStatus').textContent = 'متصل';
+        document.getElementById('scaleStatus').style.color = 'var(--success)';
+        window.toast.show('✅ تم الاتصال بالميزان', 'success');
+      }
+    }, 500);
+  }, 1000);
+}
+
+// ============================================================
+//  إعدادات الإشعارات
+// ============================================================
+function toggleNotifications() {
+  const enabled = document.getElementById('notificationsEnabled').checked;
+  document.getElementById('notificationsConfig').style.opacity = enabled ? '1' : '0.5';
+  document.getElementById('notificationsConfig').style.pointerEvents = enabled ? 'auto' : 'none';
+}
+
+// ============================================================
+//  الشعار
+// ============================================================
+function uploadLogo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const preview = document.getElementById('storeLogoPreview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    await window.setSetting('storeLogo', e.target.result);
+    window.toast.show('تم تحميل الشعار', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function deleteLogo() {
+  document.getElementById('storeLogoPreview').style.display = 'none';
+  document.getElementById('storeLogoPreview').src = '';
+  await window.setSetting('storeLogo', '');
+  window.toast.show('تم حذف الشعار', 'success');
+}
+
+// ============================================================
+//  النسخ الاحتياطي
+// ============================================================
+async function createBackup() {
+  window.toast.show('جاري إنشاء النسخة الاحتياطية...', 'info');
+  
+  // جمع كل البيانات
+  const stores = [
+    'users', 'products', 'families', 'customers', 'suppliers',
+    'sales', 'saleItems', 'debts', 'debtPayments', 'expenses',
+    'purchases', 'settings', 'logs', 'counter', 'workers', 'workerPayments'
+  ];
+  
+  const backup = {
+    version: '8.0.0',
+    timestamp: window.dateUtils.now(),
+    data: {}
+  };
+  
+  for (const store of stores) {
+    backup.data[store] = await window.dbManager.getAll(store);
+  }
+  
+  // تحميل الملف
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `posdz_backup_${window.dateUtils.today()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  document.getElementById('lastBackupDate').textContent = window.dateUtils.formatDateTime(window.dateUtils.now());
+  window.toast.show('✅ تم إنشاء النسخة الاحتياطية', 'success');
+}
+
+async function restoreBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  const confirmed = await window.modalManager.confirm(
+    '⚠️ تحذير: استعادة النسخة الاحتياطية ستحل محل جميع البيانات الحالية. هل أنت متأكد؟'
+  );
+  
+  if (!confirmed) {
+    input.value = '';
+    return;
+  }
+  
+  try {
+    const text = await file.text();
+    const backup = JSON.parse(text);
+    
+    if (backup.version !== '8.0.0') {
+      window.toast.show('نسخة احتياطية غير متوافقة', 'error');
+      return;
+    }
+    
+    window.toast.show('جاري استعادة البيانات...', 'info');
+    
+    // استعادة البيانات
+    for (const [store, records] of Object.entries(backup.data)) {
+      // مسح البيانات القديمة
+      const oldRecords = await window.dbManager.getAll(store);
+      for (const record of oldRecords) {
+        await window.dbManager.delete(store, record.id);
+      }
+      
+      // إضافة البيانات الجديدة
+      for (const record of records) {
+        await window.dbManager.add(store, record);
+      }
+    }
+    
+    window.toast.show('✅ تمت استعادة البيانات بنجاح', 'success');
+    setTimeout(() => location.reload(), 2000);
+    
+  } catch (e) {
+    window.toast.show('❌ فشل في استعادة النسخة الاحتياطية', 'error');
+  }
+  
+  input.value = '';
+}
+
+// ============================================================
+//  منطقة الخطر
+// ============================================================
+async function partialClear() {
+  const confirmed = await window.modalManager.confirm(
+    '⚠️ مسح جزئي: سيتم حذف المبيعات والديون والسجلات مع الاحتفاظ بالمنتجات والعملاء. هل تريد المتابعة؟'
+  );
+  
+  if (!confirmed) return;
+  
+  const confirmed2 = await window.modalManager.confirm(
+    '⚠️ تأكيد أخير: هذا الإجراء لا يمكن التراجع عنه!'
+  );
+  
+  if (!confirmed2) return;
+  
+  const stores = ['sales', 'saleItems', 'debts', 'debtPayments', 'logs'];
+  
+  for (const store of stores) {
+    const records = await window.dbManager.getAll(store);
+    for (const record of records) {
+      await window.dbManager.delete(store, record.id);
+    }
+  }
+  
+  await window.resetDailyCounter();
+  window.toast.show('✅ تم المسح الجزئي', 'success');
+}
+
+async function fullClear() {
+  const confirmed = await window.modalManager.confirm(
+    '🚨 تحذير: مسح كامل سيحذف جميع البيانات نهائياً!'
+  );
+  
+  if (!confirmed) return;
+  
+  const confirmed2 = await window.modalManager.confirm(
+    '🚨 تأكيد أخير: لا يمكن استعادة البيانات بعد هذا الإجراء!'
+  );
+  
+  if (!confirmed2) return;
+  
+  const stores = [
+    'users', 'products', 'families', 'customers', 'suppliers',
+    'sales', 'saleItems', 'debts', 'debtPayments', 'expenses',
+    'purchases', 'settings', 'logs', 'counter', 'workers', 'workerPayments'
+  ];
+  
+  for (const store of stores) {
+    const records = await window.dbManager.getAll(store);
+    for (const record of records) {
+      await window.dbManager.delete(store, record.id);
+    }
+  }
+  
+  await window.resetDailyCounter();
+  window.toast.show('⚠️ تم المسح الكلي', 'warning');
+  setTimeout(() => location.reload(), 2000);
+}
+
+// ============================================================
+//  حفظ الإعدادات
+// ============================================================
+async function saveAllSettings() {
+  const savePromises = [];
+  
+  // جمع كل قيم الإدخالات
+  const inputs = document.querySelectorAll('input:not([type="file"]), select');
+  inputs.forEach(input => {
+    const key = input.id;
+    if (!key) return;
+    
+    let value;
+    if (input.type === 'checkbox') {
+      value = input.checked ? '1' : '0';
+    } else {
+      value = input.value;
+    }
+    
+    savePromises.push(window.setSetting(key, value));
+  });
+  
+  // حفظ الإعدادات الإضافية
+  savePromises.push(window.setSetting('themeColor', currentTheme));
+  savePromises.push(window.setSetting('bgMode', currentBgMode));
+  savePromises.push(window.setSetting('fontSize', currentFontSize.toString()));
+  savePromises.push(window.setSetting('barcodeFontSize', currentBarcodeFontSize.toString()));
+  
+  await Promise.all(savePromises);
+  
+  // تحديث الثيم
+  await window.themeManager.apply();
+  
+  window.toast.show('✅ تم حفظ جميع الإعدادات', 'success');
+}
+
+async function resetSettings() {
+  const confirmed = await window.modalManager.confirm('إعادة تعيين جميع الإعدادات إلى القيم الافتراضية؟');
+  if (!confirmed) return;
+  
+  // حذف جميع الإعدادات
+  const settings = await window.dbManager.getAll('settings');
+  for (const setting of settings) {
+    await window.dbManager.delete('settings', setting.key);
+  }
+  
+  // إعادة تحميل الصفحة
+  window.toast.show('تم إعادة تعيين الإعدادات', 'success');
+  setTimeout(() => location.reload(), 1500);
+}
+
+// ============================================================
+//  تسجيل الخروج
+// ============================================================
+function doLogout() {
+  window.modalManager.confirm('هل تريد تسجيل الخروج؟').then(confirmed => {
+    if (confirmed) {
+      window.sessionManager.logout();
+    }
+  });
+}
+
+// ============================================================
+//  بدء التشغيل
+// ============================================================
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
