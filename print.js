@@ -95,7 +95,7 @@
     var showBC     = (await cfg('printBarcode', '1')) === '1';
 
     var paperMm  = paper === '58mm' ? 58 : 80;
-    var printW   = paper === '58mm' ? 50 : 72;
+    var printW   = paper === '58mm' ? 46 : 68;
     var fontSize = paper === '58mm' ? '9pt' : '10.5pt';
 
     /* تحليل البيع */
@@ -241,8 +241,8 @@
     /* CSS */
     var css =
       '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}' +
-      '@page{size:' + paperMm + 'mm auto;margin:2mm;}' +
-      'html,body{width:100%;max-width:' + (paperMm-4) + 'mm;background:#fff;' +
+      '@page{size:' + paperMm + 'mm auto;margin:4mm;}' +
+      'html,body{width:100%;max-width:' + (paperMm-8) + 'mm;background:#fff;' +
       'font-family:"Courier New",Courier,monospace;' +
       'font-size:' + fontSize + ';font-weight:800;direction:rtl;color:#000;}' +
       '.content{width:' + printW + 'mm;margin:0 auto;}' +
