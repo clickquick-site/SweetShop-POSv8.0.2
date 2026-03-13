@@ -1259,8 +1259,7 @@
         <div class="expenses-section">
           <div class="chart-header" style="margin-bottom:15px;">
             <div class="chart-title">
-              <i class="fa-solid
-                              <i class="fa-solid fa-clock-rotate-left"></i>
+              <i class="fa-solid fa-clock-rotate-left"></i>
               <span>آخر المصاريف</span>
             </div>
           </div>
@@ -1385,7 +1384,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="app.js"></script>
 <script src="sync.js"></script>
-<script src="print.js"></script>
+<script src="print__1_.js"></script>
 <script>
 // ============================================================
 //  POS DZ - reports.js  v8.0.0  (محسن بالكامل)
@@ -1582,8 +1581,8 @@ async function loadDashboard() {
     }
   }
   
-  // مصاريف اليوم
-  const todayExpenses = allExpenses.filter(e => e.date?.startsWith(today));
+  // مصاريف اليوم — فقط المسددة (isPaid: true) لتوافق مع expenses.html
+  const todayExpenses = allExpenses.filter(e => e.date?.startsWith(today) && e.isPaid);
   const expensesTotal = todayExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   
   // صافي الربح — يعكس فقط ما قُبض فعلاً
@@ -1881,7 +1880,7 @@ async function updateHealthMeter() {
   score -= Math.min(20, lowStock * 2);
   
   // خصم المصاريف
-  const todayExpenses = allExpenses.filter(e => e.date?.startsWith(today))
+  const todayExpenses = allExpenses.filter(e => e.date?.startsWith(today) && e.isPaid)
     .reduce((sum, e) => sum + (e.amount || 0), 0);
   
   if (todayRevenue > 0) {
@@ -2060,8 +2059,8 @@ async function loadDailyReport() {
   const totalNewDebt= daySales.reduce((sum, s) => sum + Math.max(0,(s.total||0)-(s.paid||0)), 0);
   const count = daySales.length;
   
-  // حساب المصاريف
-  const dayExpenses = allExpenses.filter(e => e.date?.startsWith(date));
+  // حساب المصاريف — فقط المسددة
+  const dayExpenses = allExpenses.filter(e => e.date?.startsWith(date) && e.isPaid);
   const expensesTotal = dayExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   
   // حساب التكلفة — فقط على المبيعات المقبوضة
@@ -2267,6 +2266,63 @@ function filterDebts(value) {
 }
 
 // ============================================================
+//  عرض زبون — تنقل إلى customers.html مع تمييزه
+// ============================================================
+function viewCustomer(customerId) {
+  if (!customerId) return;
+  window.location.href = `customers.html?highlight=${customerId}`;
+}
+
+// ============================================================
+//  تصدير المحاسبة — CSV
+// ============================================================
+async function exportAccounting() {
+  const date = document.getElementById('accDate').value;
+  if (!date) { window.toast.show('اختر تاريخاً أولاً', 'warning'); return; }
+
+  const daySales = allSales.filter(s => !s.isCancelled && s.date.startsWith(date));
+  const dayExpenses = allExpenses.filter(e => e.date?.startsWith(date) && e.isPaid);
+  const dayDebts = allDebts.filter(d => d.date.startsWith(date));
+
+  const revenue  = daySales.reduce((s, x) => s + (x.paid  || 0), 0);
+  const totalSales = daySales.reduce((s, x) => s + (x.total || 0), 0);
+
+  let cost = 0;
+  for (const sale of daySales.filter(s => (s.paid || 0) > 0)) {
+    const items = allItems.filter(i => i.saleId === sale.id);
+    for (const item of items) {
+      const product = allProducts.find(p => p.id === item.productId);
+      cost += (product?.buyPrice || 0) * item.quantity;
+    }
+  }
+
+  const expensesTotal = dayExpenses.reduce((s, e) => s + (e.amount || 0), 0);
+  const profit = revenue - cost - expensesTotal;
+
+  // بناء CSV
+  const rows = [
+    ['\uFEFF' + 'نوع البند', 'التفاصيل', 'المبلغ'],
+    ['إجمالي المبيعات', `${daySales.length} فاتورة`, totalSales.toFixed(2)],
+    ['نقدي مقبوض', '', revenue.toFixed(2)],
+    ['تكلفة البضاعة', '', cost.toFixed(2)],
+    ...dayExpenses.map(e => ['مصروف', `${e.category}${e.note ? ' - ' + e.note : ''}`, e.amount.toFixed(2)]),
+    ['صافي الربح', '', profit.toFixed(2)],
+    [''],
+    ['الديون الجديدة', `${dayDebts.length} دين`, dayDebts.reduce((s, d) => s + (d.amount || 0), 0).toFixed(2)],
+  ];
+
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `محاسبة_${date}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  window.toast.show('✅ تم تصدير ملف CSV', 'success');
+}
+
+// ============================================================
 //  تقرير العائلات
 // ============================================================
 async function loadFamiliesReport() {
@@ -2441,8 +2497,8 @@ async function loadAccounting() {
     }
   }
   
-  // المصاريف
-  const dayExpenses = allExpenses.filter(e => e.date?.startsWith(date));
+  // المصاريف — فقط المسددة
+  const dayExpenses = allExpenses.filter(e => e.date?.startsWith(date) && e.isPaid);
   const expensesTotal = dayExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   
   // الديون
@@ -2501,6 +2557,8 @@ async function addExpense() {
     amount,
     note,
     date,
+    isPaid: true,
+    paidDate: window.dateUtils.now(),
     createdAt: window.dateUtils.now()
   });
   
