@@ -1326,6 +1326,7 @@ function addToCart(product, quantity = null) {
   
   if (product.quantity < qty) {
     window.toast.show(`⚠️ الكمية المتاحة: ${product.quantity} فقط`, 'warning');
+    window.SoundManager?.play('out-of-stock');
     return;
   }
   
@@ -1335,6 +1336,7 @@ function addToCart(product, quantity = null) {
     const newQty = cart[existing].quantity + qty;
     if (newQty > product.quantity) {
       window.toast.show(`⚠️ الكمية المتاحة: ${product.quantity} فقط`, 'warning');
+      window.SoundManager?.play('out-of-stock');
       return;
     }
     cart[existing].quantity = newQty;
