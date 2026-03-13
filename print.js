@@ -241,8 +241,8 @@
     /* CSS */
     var css =
       '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}' +
-      '@page{size:' + paperMm + 'mm auto;margin:3mm 2mm;}' +
-      'html,body{width:' + paperMm + 'mm;background:#fff;' +
+      '@page{size:' + paperMm + 'mm auto;margin:2mm;}' +
+      'html,body{width:100%;max-width:' + (paperMm-4) + 'mm;background:#fff;' +
       'font-family:"Courier New",Courier,monospace;' +
       'font-size:' + fontSize + ';font-weight:800;direction:rtl;color:#000;}' +
       '.content{width:' + printW + 'mm;margin:0 auto;}' +
@@ -252,7 +252,7 @@
       '.barcode-num{font-family:"Courier New",monospace;font-size:.82em;letter-spacing:3px;margin:2px 0;font-weight:700;text-align:center;}' +
       '.t2{width:100%;border-collapse:collapse;table-layout:fixed;}' +
       '.t2 col:nth-child(1){width:42%;}.t2 col:nth-child(2){width:58%;}' +
-      '.t2 td{padding:2px 0;vertical-align:baseline;}' +
+      '.t2 td{padding:2px 0;vertical-align:baseline;overflow:hidden;word-break:break-all;}' +
       '.ti{width:100%;border-collapse:collapse;table-layout:fixed;' +
       'font-size:' + fontSize + ';font-weight:800;margin:3px 0;}' +
       '.ti thead tr{border-bottom:2px solid #000;}' +
@@ -262,7 +262,7 @@
       '.cn{width:34%;text-align:right;}' +
       '.cq{width:9%;text-align:center;}' +
       '.cp{width:24%;text-align:right;white-space:nowrap;}' +
-      '.ct{width:33%;text-align:left;direction:ltr;font-weight:900;}' +
+      '.ct{width:33%;text-align:right;direction:ltr;font-weight:900;}' +
       '.total-row td{font-size:1.3em;font-weight:900;padding:3px 0;}' +
       '.paid-row td{font-size:1.15em;font-weight:800;padding:2px 0;}' +
       'hr{border:none;margin:4px 0;}' +
